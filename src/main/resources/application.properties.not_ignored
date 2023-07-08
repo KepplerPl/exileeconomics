@@ -1,0 +1,20 @@
+exileeconomics.bearer_token=
+exileeconomics.api.host=api.pathofexile.com
+exileeconomics.api.schema=https
+exileeconomics.api.scope.service.psapi=public-stash-tabs
+exileeconomics.api.user_agent=
+exileeconomics.active_league=crucible
+
+
+logging.file.path=.
+logging.file.name=myapp.log
+#database stuff
+#spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=jdbc:mysql://${MYSQL_HOST:localhost}:3306/poedb
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.show-sql=false
+#spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
