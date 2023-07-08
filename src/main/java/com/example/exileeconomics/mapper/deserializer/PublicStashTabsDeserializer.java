@@ -3,8 +3,8 @@ package com.example.exileeconomics.mapper.deserializer;
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.mapper.ItemDao;
 import com.example.exileeconomics.mapper.PublicStashTabsDao;
+import com.example.exileeconomics.price.PriceParser;
 import com.example.exileeconomics.price.exception.InvalidCurrencyException;
-import com.example.exileeconomics.price.interfaces.PriceParser;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -17,7 +17,7 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
     private final String activeLeague;
     private final PriceParser parser;
 
-    public PublicStashTabsDeserializer(String activeLeague, com.example.exileeconomics.price.PriceParser parser) {
+    public PublicStashTabsDeserializer(String activeLeague, PriceParser parser) {
         this.activeLeague = activeLeague;
         this.parser = parser;
     }

@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PriceParser implements com.example.exileeconomics.price.interfaces.PriceParser {
+public class PriceParser {
     private final Set<String> currencies = new HashSet<>(List.of(
             ItemDefinitionEnum.CHAOS_ORB.getName(),
             ItemDefinitionEnum.DIVINE_ORB.getName())
