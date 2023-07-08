@@ -13,10 +13,8 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String note;
     private Integer quantity;
     private BigDecimal price;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private ItemDefinition itemDefinition;
 
@@ -63,14 +61,6 @@ public class Item {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
     }
 
     public Integer getQuantity() {

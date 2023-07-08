@@ -1,16 +1,18 @@
 package com.example.exileeconomics.mapper;
 
+import java.math.BigDecimal;
+
 public class ItemDao {
-    private String note; //price
+    private BigDecimal price; //price
     private String baseType; //name
     private Integer stackSize; //quantity
 
-    public String getNote() {
-        return note;
+    public BigDecimal getPrice() {
+        return price;
     }
 
-    public void setNote(String note) {
-        this.note = note;
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     public String getBaseType() {

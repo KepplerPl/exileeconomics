@@ -1,4 +1,5 @@
 package com.example.exileeconomics.producer_consumer.consumer;
+import com.example.exileeconomics.price.PriceParser;
 import com.example.exileeconomics.producer_consumer.NoSuppressedRunnable;
 
 import com.example.exileeconomics.Properties;
@@ -33,7 +34,9 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable{
     @Override
     public void doRun() throws InterruptedException {
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(PublicStashTabsDao.class, new PublicStashTabsDeserializerFromJson(new PublicStashTabsDeserializer(properties.getActiveLeague())));
+        builder.registerTypeAdapter(PublicStashTabsDao.class, new PublicStashTabsDeserializerFromJson(
+                new PublicStashTabsDeserializer(properties.getActiveLeague(), new PriceParser()))
+        );
 
         for(int i = 0; i < jsonResponsesQueue.size(); i++) {
             PublicStashTabsDao publicStashTabsDao = builder
@@ -49,7 +52,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable{
         if (!publicStashTabsDao.getItemDaos().isEmpty()) {
             for (ItemDao itemDao : publicStashTabsDao.getItemDaos()) {
                 Item item = new Item();
-                item.setNote(itemDao.getNote());
+                item.setPrice(itemDao.getPrice());
                 item.setQuantity(itemDao.getStackSize());
                 item.setItemDefinition(itemDefinitions.get(itemDao.getBaseType().toLowerCase()));
                 BigDecimal bigDecimal = new BigDecimal(1);
