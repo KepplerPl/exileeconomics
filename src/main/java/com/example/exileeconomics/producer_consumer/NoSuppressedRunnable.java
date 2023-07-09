@@ -12,6 +12,7 @@ public interface NoSuppressedRunnable extends Runnable {
             doRun();
         } catch (Exception e) {
             // should probably log this
+            System.out.println(e.getClass());
             System.out.println(e.getMessage());
         }
     }

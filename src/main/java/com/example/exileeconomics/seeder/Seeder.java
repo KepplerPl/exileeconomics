@@ -1,9 +1,9 @@
 package com.example.exileeconomics.seeder;
 
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
-import com.example.exileeconomics.entity.CurrencyRatio;
-import com.example.exileeconomics.entity.ItemDefinition;
-import com.example.exileeconomics.entity.NextId;
+import com.example.exileeconomics.entity.CurrencyRatioEntity;
+import com.example.exileeconomics.entity.ItemDefinitionEntity;
+import com.example.exileeconomics.entity.NextIdEntity;
 import com.example.exileeconomics.repository.CurrencyRatioRepository;
 import com.example.exileeconomics.repository.ItemDefinitionsRepository;
 import com.example.exileeconomics.repository.NextIdRepository;
@@ -48,14 +48,14 @@ public class Seeder {
     private void seedCurrencyRatio() {
 
         if(!currencyRatioRepository.findAll().iterator().hasNext()) {
-            ItemDefinition divineOrb = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.DIVINE_ORB.getName());
-            CurrencyRatio divineOrbToChaosRatio = new CurrencyRatio();
+            ItemDefinitionEntity divineOrb = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.DIVINE_ORB.getName());
+            CurrencyRatioEntity divineOrbToChaosRatio = new CurrencyRatioEntity();
             divineOrbToChaosRatio.setChaos(200);
             divineOrbToChaosRatio.setItemDefinition(divineOrb);
             currencyRatioRepository.save(divineOrbToChaosRatio);
 
-            ItemDefinition awakenedSextant = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
-            CurrencyRatio sextantToChaosRatio = new CurrencyRatio();
+            ItemDefinitionEntity awakenedSextant = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
+            CurrencyRatioEntity sextantToChaosRatio = new CurrencyRatioEntity();
             sextantToChaosRatio.setChaos(5);
             sextantToChaosRatio.setItemDefinition(awakenedSextant);
             currencyRatioRepository.save(sextantToChaosRatio);
@@ -65,7 +65,7 @@ public class Seeder {
     private void seedItemDefinitions() {
         if(!itemDefinitionsRepository.findAll().iterator().hasNext()) {
             Set<String> existingItemsAsSet = new HashSet<>();
-            Iterable<ItemDefinition> existingIndexableItems = itemDefinitionsRepository.findAll();
+            Iterable<ItemDefinitionEntity> existingIndexableItems = itemDefinitionsRepository.findAll();
             existingIndexableItems.forEach(item -> existingItemsAsSet.add(item.getName()));
 
             ItemDefinitionEnum[] items = ItemDefinitionEnum.values();
@@ -78,7 +78,7 @@ public class Seeder {
             }
 
             for(String item:itemDefinitions) {
-                ItemDefinition indexableItem = new ItemDefinition();
+                ItemDefinitionEntity indexableItem = new ItemDefinitionEntity();
                 indexableItem.setName(item);
                 itemDefinitionsRepository.save(indexableItem);
             }
@@ -87,9 +87,9 @@ public class Seeder {
 
     private void seedNextId() {
         if(!nextIdRepository.findAll().iterator().hasNext()) {
-            NextId nextId = new NextId();
-            nextId.setNextId("1997310912-1992768933-1927582781-2136932361-2073806912");
-            nextIdRepository.save(nextId);
+            NextIdEntity nextIdEntity = new NextIdEntity();
+            nextIdEntity.setNextId("1997310912-1992768933-1927582781-2136932361-2073806912");
+            nextIdRepository.save(nextIdEntity);
         }
     }
 }

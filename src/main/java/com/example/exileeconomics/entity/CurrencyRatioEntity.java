@@ -13,14 +13,14 @@ import java.sql.Timestamp;
  */
 @Entity
 @Table(name = "currency_ratio")
-public class CurrencyRatio {
+public class CurrencyRatioEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private Integer chaos;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    private ItemDefinition itemDefinition;
+    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    private ItemDefinitionEntity itemDefinitionEntity;
 
     @PrePersist
     protected void onCreate() {
@@ -28,12 +28,12 @@ public class CurrencyRatio {
     }
     protected Timestamp createdAt;
 
-    public ItemDefinition getItemDefinition() {
-        return itemDefinition;
+    public ItemDefinitionEntity getItemDefinition() {
+        return itemDefinitionEntity;
     }
 
-    public void setItemDefinition(ItemDefinition itemDefinition) {
-        this.itemDefinition = itemDefinition;
+    public void setItemDefinition(ItemDefinitionEntity itemDefinitionEntity) {
+        this.itemDefinitionEntity = itemDefinitionEntity;
     }
 
     public Long getId() {

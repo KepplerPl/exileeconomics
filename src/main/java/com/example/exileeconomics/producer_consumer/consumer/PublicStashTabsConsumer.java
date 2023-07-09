@@ -1,41 +1,53 @@
 package com.example.exileeconomics.producer_consumer.consumer;
-import com.example.exileeconomics.price.PriceParser;
 import com.example.exileeconomics.producer_consumer.NoSuppressedRunnable;
 
-import com.example.exileeconomics.Properties;
-import com.example.exileeconomics.entity.Item;
-import com.example.exileeconomics.entity.ItemDefinition;
+import com.example.exileeconomics.entity.ItemEntity;
+import com.example.exileeconomics.entity.ItemDefinitionEntity;
 import com.example.exileeconomics.mapper.ItemDao;
 import com.example.exileeconomics.mapper.PublicStashTabsDao;
-import com.example.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
 import com.example.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
 import com.example.exileeconomics.repository.ItemEntityRepository;
 import com.google.gson.GsonBuilder;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 
 public class PublicStashTabsConsumer implements NoSuppressedRunnable{
     private final BlockingQueue<String> jsonResponsesQueue;
-    private final Properties properties;
-    private final HashMap<String, ItemDefinition> itemDefinitions;
+    private final HashMap<String, ItemDefinitionEntity> itemDefinitions;
     private final ItemEntityRepository itemEntityRepository;
+    private final CountDownLatch countDownLatch;
+    private final PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson;
 
-    public PublicStashTabsConsumer(BlockingQueue<String> jsonResponsesQueue, Properties properties, HashMap<String, ItemDefinition> itemDefinitions, ItemEntityRepository itemEntityRepository) {
+    public PublicStashTabsConsumer(
+            BlockingQueue<String> jsonResponsesQueue,
+            HashMap<String, ItemDefinitionEntity> itemDefinitions,
+            ItemEntityRepository itemEntityRepository,
+            CountDownLatch countDownLatch,
+            PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson
+    ) {
         this.jsonResponsesQueue = jsonResponsesQueue;
-        this.properties = properties;
         this.itemDefinitions = itemDefinitions;
         this.itemEntityRepository = itemEntityRepository;
+        this.countDownLatch = countDownLatch;
+        this.publicStashTabsDeserializerFromJson = publicStashTabsDeserializerFromJson;
     }
 
     @Override
     public void doRun() throws InterruptedException {
+        countDownLatch.await();
+
+        System.out.println("Starting consumer");
+
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(PublicStashTabsDao.class, new PublicStashTabsDeserializerFromJson(
-                new PublicStashTabsDeserializer(properties.getActiveLeague(), new PriceParser()))
+        builder.registerTypeAdapter(
+                PublicStashTabsDao.class,
+                publicStashTabsDeserializerFromJson
         );
 
         for(int i = 0; i < jsonResponsesQueue.size(); i++) {
@@ -48,24 +60,21 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable{
     }
 
     private void saveItems(PublicStashTabsDao publicStashTabsDao) {
-        List<Item> itemList = new ArrayList<>();
+        List<ItemEntity> itemEntityList = new ArrayList<>();
         if (!publicStashTabsDao.getItemDaos().isEmpty()) {
             for (ItemDao itemDao : publicStashTabsDao.getItemDaos()) {
-                Item item = new Item();
-                item.setPrice(itemDao.getPrice());
-                item.setQuantity(itemDao.getStackSize());
-                item.setItemDefinition(itemDefinitions.get(itemDao.getBaseType().toLowerCase()));
-                BigDecimal bigDecimal = new BigDecimal(1);
-                item.setPrice(bigDecimal);
+                ItemEntity itemEntity = new ItemEntity();
+                itemEntity.setPrice(itemDao.getPrice());
+                itemEntity.setQuantity(itemDao.getStackSize());
+                itemEntity.setItemDefinition(itemDefinitions.get(itemDao.getBaseType().toLowerCase()));
+                itemEntity.setPrice(itemDao.getPrice());
 
-                itemList.add(item);
+                itemEntityList.add(itemEntity);
             }
 
-            System.out.println("Saving a total of " + itemList.size() + " items to database");
+            System.out.println("Saving a total of " + itemEntityList.size() + " items to database");
 
-            itemEntityRepository.saveAll(itemList);
+            itemEntityRepository.saveAll(itemEntityList);
         }
-
-        System.out.println("No items to save to database");
     }
 }

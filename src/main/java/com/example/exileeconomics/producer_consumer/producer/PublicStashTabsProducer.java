@@ -1,6 +1,6 @@
 package com.example.exileeconomics.producer_consumer.producer;
 
-import com.example.exileeconomics.entity.NextId;
+import com.example.exileeconomics.entity.NextIdEntity;
 import com.example.exileeconomics.http.ApiHeaderBag;
 import com.example.exileeconomics.http.RequestHandler;
 import com.example.exileeconomics.producer_consumer.NoSuppressedRunnable;
@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
@@ -23,18 +24,30 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     private final RequestHandler requestHandler;
     private final ApiHeaderBag apiHeaderBag;
     private final NextIdRepository nextIdRepository;
+    private final CountDownLatch countDownLatch;
 
-    public PublicStashTabsProducer(BlockingQueue<String> nextIdQueue, BlockingQueue<String> jsonResponsesQueue, Throttler throttler, RequestHandler requestHandler, ApiHeaderBag apiHeaderBag, NextIdRepository nextIdRepository) {
+    public PublicStashTabsProducer(
+            BlockingQueue<String> nextIdQueue,
+            BlockingQueue<String> jsonResponsesQueue,
+            Throttler throttler,
+            RequestHandler requestHandler,
+            ApiHeaderBag apiHeaderBag,
+            NextIdRepository nextIdRepository,
+            CountDownLatch countDownLatch
+    ) {
         this.nextIdQueue = nextIdQueue;
         this.jsonResponsesQueue = jsonResponsesQueue;
         this.throttler = throttler;
         this.requestHandler = requestHandler;
         this.apiHeaderBag = apiHeaderBag;
         this.nextIdRepository = nextIdRepository;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
     public void doRun() throws IOException, InterruptedException {
+        countDownLatch.await();
+
         if (!throttler.canDoRequest()) {
             System.out.println(Thread.currentThread().getName() + " tried to do a request but couldn't because hits are " + throttler.getCurrentCounter());
             try {
@@ -67,6 +80,7 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
 
         responseBody = requestHandler.getResponseAsString(response);
 
+//        nextIdFromRequest = "1997435194-1992926428-1927712828-2137093406-2073944867";
         nextIdFromRequest = apiHeaderBag.extractNextId();
         nextIdQueue.put(nextIdFromRequest);
         jsonResponsesQueue.put(responseBody);
@@ -77,8 +91,8 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     }
 
     private void saveNextId(String nextId) {
-        NextId nextIdQ = new NextId();
-        nextIdQ.setNextId(nextId);
-        nextIdRepository.save(nextIdQ);
+        NextIdEntity nextIdEntityQ = new NextIdEntity();
+        nextIdEntityQ.setNextId(nextId);
+        nextIdRepository.save(nextIdEntityQ);
     }
 }

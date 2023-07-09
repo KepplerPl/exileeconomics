@@ -9,24 +9,25 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "item")
-public class Item {
+public class ItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private Integer quantity;
+    @Column(precision=10, scale=4)
     private BigDecimal price;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private ItemDefinition itemDefinition;
+    private ItemDefinitionEntity itemDefinitionEntity;
 
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
-        price.setScale(2, RoundingMode.HALF_UP);
+        price.setScale(4, RoundingMode.HALF_DOWN);
     }
 
     @PreUpdate
     public void pricePrecisionConvert() {
-        price.setScale(2, RoundingMode.HALF_UP);
+        price.setScale(4, RoundingMode.HALF_DOWN);
     }
 
     protected Timestamp createdAt;
@@ -47,12 +48,12 @@ public class Item {
         this.price = price;
     }
 
-    public ItemDefinition getItemDefinition() {
-        return itemDefinition;
+    public ItemDefinitionEntity getItemDefinition() {
+        return itemDefinitionEntity;
     }
 
-    public void setItemDefinition(ItemDefinition itemDefinition) {
-        this.itemDefinition = itemDefinition;
+    public void setItemDefinition(ItemDefinitionEntity itemDefinitionEntity) {
+        this.itemDefinitionEntity = itemDefinitionEntity;
     }
 
     public Long getId() {

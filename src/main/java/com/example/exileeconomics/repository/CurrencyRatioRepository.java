@@ -1,15 +1,18 @@
 package com.example.exileeconomics.repository;
 
-import com.example.exileeconomics.entity.CurrencyRatio;
+import com.example.exileeconomics.entity.CurrencyRatioEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
-public interface CurrencyRatioRepository extends CrudRepository<CurrencyRatio, Long> {
+import java.util.Collection;
+import java.util.List;
+
+public interface CurrencyRatioRepository extends CrudRepository<CurrencyRatioEntity, Long> {
+
     @Query(
-            value = "SELECT * FROM currency_ratio " +
-                    "WHERE created_at " +
-                    "BETWEEN timestamp(CURRENT_DATE) AND (timestamp(CURRENT_DATE) + INTERVAL 1 DAY)" +
-                    "ORDER BY created_at DESC LIMIT 1;",
-            nativeQuery = true)
-    CurrencyRatio mostCurrentCurrencyRatio();
+            value = "SELECT * FROM currency_ratio WHERE item_definition_entity_id in (:list) ORDER BY created_at DESC LIMIT :limit",
+            nativeQuery = true
+    )
+    Collection<CurrencyRatioEntity> mostCurrentCurrencyRatio(@Param("list") List<Long> list, @Param("limit") Integer limit);
 }

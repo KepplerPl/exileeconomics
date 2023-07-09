@@ -27,7 +27,8 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
         PublicStashTabsDao publicStashTabsDao = new PublicStashTabsDao();
         List<JsonElement> stashes = jsonObject.get("stashes").getAsJsonArray().asList();
 
-        List<ItemDao> items = null;
+        List<List<ItemDao>> items = new ArrayList<>();
+        List<ItemDao> itemDaoList = new ArrayList<>();
 
         for (JsonElement stashObject : stashes) {
             if (stashObject.isJsonObject()) {
@@ -36,14 +37,18 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                     continue;
                 }
 
-                items = itemFromJson(stash);
+                items.add(itemFromJson(stash));
             }
         }
 
-        if (items == null) {
-            return publicStashTabsDao;
+        if(!items.isEmpty()) {
+            for(List<ItemDao> itemDaoLoopList : items) {
+                if(!itemDaoLoopList.isEmpty()) {
+                    itemDaoList.addAll(itemDaoLoopList);
+                }
+            }
         }
-        publicStashTabsDao.setItemDaos(items);
+        publicStashTabsDao.setItemDaos(itemDaoList);
 
         return publicStashTabsDao;
     }
@@ -70,10 +75,11 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
             if (!isItemValid(itemJson)) {
                 continue;
             }
+
             BigDecimal price;
             try{
                 price = parser.parsePrice(itemJson.get("note").getAsString());
-            } catch (InvalidCurrencyException e) {
+            } catch (Exception e) {
                 continue;
             }
 

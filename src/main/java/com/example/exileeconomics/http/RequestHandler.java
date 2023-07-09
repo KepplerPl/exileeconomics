@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static org.antlr.v4.runtime.misc.Utils.readFile;
 
 @Service
 public final class RequestHandler {
@@ -29,6 +34,8 @@ public final class RequestHandler {
     }
 
     public String getResponseAsString(HttpURLConnection connection) throws IOException {
+//        return Files.readString(Paths.get("C:\\Users\\Mine\\Desktop\\exileeconomics\\test.json"));
+
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String inputLine;
         StringBuilder content = new StringBuilder();

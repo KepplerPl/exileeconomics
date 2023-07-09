@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "next_id")
-public class NextId {
+public class NextIdEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

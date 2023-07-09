@@ -1,8 +1,9 @@
 package com.example.exileeconomics.definitions;
 
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public enum ItemDefinitionEnum {
@@ -394,15 +395,18 @@ public enum ItemDefinitionEnum {
     ;
 
     private static final Set<String> enumAsString = new HashSet<>();
+    private static final Map<String, ItemDefinitionEnum> stringMap;
+
+    public static ItemDefinitionEnum fromString(String value) {
+        if(!ItemDefinitionEnum.contains(value)) {
+            throw new IllegalArgumentException("Unrecognized enum value, got " + value);
+        }
+
+        return stringMap.get(value);
+    }
 
     // questionable static use here tbh
     public static boolean contains(String name) {
-        if(enumAsString.isEmpty()) {
-            for (ItemDefinitionEnum c : ItemDefinitionEnum.values()) {
-                enumAsString.add(c.name());
-            }
-        }
-
         return enumAsString.contains(name.toLowerCase());
     }
 
@@ -414,5 +418,14 @@ public enum ItemDefinitionEnum {
 
     public String getName() {
         return name;
+    }
+
+    static {
+        stringMap = Arrays.stream(values())
+                .collect(Collectors.toMap(ItemDefinitionEnum::getName, Function.identity()));
+
+        for (ItemDefinitionEnum c : ItemDefinitionEnum.values()) {
+            ItemDefinitionEnum.enumAsString.add(c.getName());
+        }
     }
 }

@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "item_definition")
-public class ItemDefinition {
+public class ItemDefinitionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

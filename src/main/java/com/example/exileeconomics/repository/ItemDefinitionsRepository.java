@@ -1,9 +1,13 @@
 package com.example.exileeconomics.repository;
 
-import com.example.exileeconomics.entity.ItemDefinition;
+import com.example.exileeconomics.entity.ItemDefinitionEntity;
 import org.springframework.data.repository.CrudRepository;
 
-public interface ItemDefinitionsRepository extends CrudRepository<ItemDefinition, Long> {
-    ItemDefinition getItemDefinitionByName(String name);
+import java.util.Set;
+
+public interface ItemDefinitionsRepository extends CrudRepository<ItemDefinitionEntity, Long> {
+    ItemDefinitionEntity getItemDefinitionByName(String name);
+
+    Iterable<ItemDefinitionEntity> findAllByNameIn(Set<String> name);
 
 }
