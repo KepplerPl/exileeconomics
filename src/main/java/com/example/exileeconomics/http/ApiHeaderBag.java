@@ -39,7 +39,6 @@ public class ApiHeaderBag {
         return getHeaderValue(String.format("X-Rate-Limit-%s-State", ruleName)).trim().split(":");
     }
 
-
     private String[] getXRateLimit() {
         String ruleName = getHeaderValue("X-Rate-Limit-Rules");
         return getHeaderValue(String.format("X-Rate-Limit-%s", ruleName)).trim().split(":");

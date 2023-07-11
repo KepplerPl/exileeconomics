@@ -1,14 +1,13 @@
-package com.example.exileeconomics.mapper;
+package com.example.exileeconomics.price;
 
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.entity.CurrencyRatioEntity;
 
 import java.math.BigDecimal;
 
-public class ItemDao {
+public class SellableItem {
     private BigDecimal price;
     private CurrencyRatioEntity currencyRatio;
-    private ItemDefinitionEnum item;
     private int totalQuantity;
     private int soldQuantity;
 
@@ -26,14 +25,6 @@ public class ItemDao {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public ItemDefinitionEnum getItem() {
-        return item;
-    }
-
-    public void setItem(ItemDefinitionEnum item) {
-        this.item = item;
     }
 
     public int getTotalQuantity() {

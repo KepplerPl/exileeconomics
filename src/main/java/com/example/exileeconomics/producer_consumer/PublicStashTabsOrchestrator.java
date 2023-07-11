@@ -10,7 +10,7 @@ import com.example.exileeconomics.http.Throttler;
 import com.example.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
 import com.example.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
 import com.example.exileeconomics.price.CurrencyRatio;
-import com.example.exileeconomics.price.PriceParser;
+import com.example.exileeconomics.price.SellableItemBuilder;
 import com.example.exileeconomics.producer_consumer.consumer.PublicStashTabsConsumer;
 import com.example.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
 import com.example.exileeconomics.repository.CurrencyRatioRepository;
@@ -37,13 +37,13 @@ public class PublicStashTabsOrchestrator {
     private final ItemEntityRepository itemEntityRepository;
     private final BlockingQueue<String> nextIdQueue = new ArrayBlockingQueue<>(10);
     private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(100);
-    private final HashMap<String, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
+    private final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3);
     private final ApiHeaderBag apiHeaderBag;
     private final Throttler throttler;
     private final CurrencyRatioRepository currencyRatioRepository;
     private CurrencyRatio currencyRatio;
-    private final CountDownLatch countDownLatch;
+    private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsOrchestrator(
             @Autowired RequestHandler requestHandler,
@@ -64,30 +64,30 @@ public class PublicStashTabsOrchestrator {
         this.throttler = throttler;
         this.currencyRatioRepository = currencyRatioRepository;
 
-        countDownLatch = new CountDownLatch(1);
+        countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
 
-        init();
+        initCurrencyRatio();
     }
 
-    private void init() {
-        Set<String> parsableCurrencies = new HashSet<>(List.of(
-                ItemDefinitionEnum.CHAOS_ORB.getName(),
-                ItemDefinitionEnum.DIVINE_ORB.getName(),
-                ItemDefinitionEnum.AWAKENED_SEXTANT.getName())
+    private void initCurrencyRatio() {
+        Set<ItemDefinitionEnum> parsableCurrencies = new HashSet<>(List.of(
+                ItemDefinitionEnum.CHAOS_ORB,
+                ItemDefinitionEnum.DIVINE_ORB,
+                ItemDefinitionEnum.AWAKENED_SEXTANT)
         );
-        currencyRatio = new CurrencyRatio(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository, countDownLatch);
+        currencyRatio = new CurrencyRatio(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository, countDownLatchForCurrencyRatioInitialization);
     }
 
     @EventListener
     @Order(value = 2)
     public void onApplicationEvent(ApplicationReadyEvent event) throws InterruptedException {
-
         setCurrentNextId();
-        setCurrentItemDefinitions();
+        setItemDefinitions();
         setInitialHeaders();
+
+        startCurrencyRatioUpdater();
         startPublicStashProducer();
         startPublicStashConsumer();
-        startCurrencyRatioUpdater();
     }
 
     private void startCurrencyRatioUpdater() {
@@ -100,7 +100,7 @@ public class PublicStashTabsOrchestrator {
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
                 new PublicStashTabsDeserializer(
                         properties.getActiveLeague(),
-                        new PriceParser(currencyRatio)
+                        new SellableItemBuilder(currencyRatio)
                 )
         );
 
@@ -108,7 +108,7 @@ public class PublicStashTabsOrchestrator {
                 jsonResponsesQueue,
                 itemDefinitions,
                 itemEntityRepository,
-                countDownLatch,
+                countDownLatchForCurrencyRatioInitialization,
                 publicStashTabsDeserializerFromJson
         );
         executorService.scheduleWithFixedDelay(publicStashTabsConsumer, 10_000, 10_000, TimeUnit.MILLISECONDS);
@@ -122,7 +122,7 @@ public class PublicStashTabsOrchestrator {
                 requestHandler,
                 apiHeaderBag,
                 nextIdRepository,
-                countDownLatch
+                countDownLatchForCurrencyRatioInitialization
         );
         executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 10, TimeUnit.MILLISECONDS);
     }
@@ -139,9 +139,11 @@ public class PublicStashTabsOrchestrator {
         }
     }
 
-    private void setCurrentItemDefinitions() {
+    private void setItemDefinitions() {
         Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsRepository.findAll();
-        itemDefinitionFromDatabase.forEach(itemDef -> itemDefinitions.put(itemDef.getName(), itemDef));
+        for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {
+            itemDefinitions.put(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()), itemDefinitionEntity);
+        }
     }
 
     private void setCurrentNextId() throws InterruptedException {

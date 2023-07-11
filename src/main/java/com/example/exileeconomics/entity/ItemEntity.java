@@ -2,58 +2,40 @@ package com.example.exileeconomics.entity;
 
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @Entity
 @Table(name = "item")
-public class ItemEntity {
+public class ItemEntity extends AbstractEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private Integer quantity;
-    @Column(precision=10, scale=4)
+    private int totalQuantity;
+    private int soldQuantity;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private CurrencyRatioEntity currencyRatio;
+    @Column(precision=11, scale=4)
     private BigDecimal price;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private ItemDefinitionEntity itemDefinitionEntity;
+    private ItemDefinitionEntity item;
+    protected Timestamp createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
-        price.setScale(4, RoundingMode.HALF_DOWN);
+        price.setScale(4, RoundingMode.UNNECESSARY);
     }
 
     @PreUpdate
     public void pricePrecisionConvert() {
-        price.setScale(4, RoundingMode.HALF_DOWN);
-    }
-
-    protected Timestamp createdAt;
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public ItemDefinitionEntity getItemDefinition() {
-        return itemDefinitionEntity;
-    }
-
-    public void setItemDefinition(ItemDefinitionEntity itemDefinitionEntity) {
-        this.itemDefinitionEntity = itemDefinitionEntity;
+        price.setScale(4, RoundingMode.UNNECESSARY);
     }
 
     public Long getId() {
@@ -64,12 +46,51 @@ public class ItemEntity {
         this.id = id;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public int getTotalQuantity() {
+        return totalQuantity;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setTotalQuantity(int totalQuantity) {
+        this.totalQuantity = totalQuantity;
     }
 
+    public int getSoldQuantity() {
+        return soldQuantity;
+    }
+
+    public void setSoldQuantity(int soldQuantity) {
+        this.soldQuantity = soldQuantity;
+    }
+
+    public CurrencyRatioEntity getCurrencyRatio() {
+        return currencyRatio;
+    }
+
+    public void setCurrencyRatio(CurrencyRatioEntity currencyRatio) {
+        this.currencyRatio = currencyRatio;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public ItemDefinitionEntity getItem() {
+        return item;
+    }
+
+    public void setItem(ItemDefinitionEntity item) {
+        this.item = item;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 }

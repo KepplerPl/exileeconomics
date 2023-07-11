@@ -10,7 +10,7 @@ public enum ItemDefinitionEnum {
     WINGED_TORMENT_SCARAB("winged torment scarab"),
     SCREAMING_ESSENCE_OF_ENVY("screaming essence of envy"),
     AMORPHOUS_DELIRIUM_ORB("amorphous delirium orb"),
-    XOPHS_BREACHSTONE("Xoph's Breachstone"),
+    XOPHS_BREACHSTONE("xoph's breachstone"),
     SCREAMING_ESSENCE_OF_FEAR("screaming essence of fear"),
     WEALTH_AND_POWER("wealth and power"),
     GILDED_SHAPER_SCARAB("gilded shaper scarab"),
@@ -20,9 +20,9 @@ public enum ItemDefinitionEnum {
     WEEPING_ESSENCE_OF_RAGE("weeping essence of rage"),
     PRISTINE_FOSSIL("pristine fossil"),
     SHRIEKING_ESSENCE_OF_HATRED("shrieking essence of hatred"),
-    UULNETOLS_BREACHSTONE("Uul-Netol's Breachstone"),
+    UULNETOLS_BREACHSTONE("uul-netol's breachstone"),
     MIRROR_OF_KALANDRA("mirror of kalandra"),
-    ESHS_BREACHSTONE("Esh's Breachstone"),
+    ESHS_BREACHSTONE("esh's breachstone"),
     HUNTERS_EXALTED_ORB("hunter's exalted orb"),
     ORB_OF_CHANCE("orb of chance"),
     DEAFENING_ESSENCE_OF_ENVY("deafening essence of envy"),
@@ -62,7 +62,7 @@ public enum ItemDefinitionEnum {
     GRAND_ELDRITCH_ICHOR("grand eldritch ichor"),
     WAILING_ESSENCE_OF_ANGER("wailing essence of anger"),
     THE_FISHMONGER("the fishmonger"),
-    CHAYULAS_FLAWLESS_BREACHSTONE("Chayula's Flawless Breachstone"),
+    CHAYULAS_FLAWLESS_BREACHSTONE("chayula's flawless breachstone"),
     SCREAMING_ESSENCE_OF_ANGER("screaming essence of anger"),
     SCREAMING_ESSENCE_OF_ZEAL("screaming essence of zeal"),
     DROXS_CREST("drox's crest"),
@@ -181,7 +181,7 @@ public enum ItemDefinitionEnum {
     DARKER_HALF("darker half"),
     RUSTED_ABYSS_SCARAB("rusted abyss scarab"),
     METALLIC_FOSSIL("metallic fossil"),
-    TULS_BREACHSTONE("Tul's Breachstone"),
+    TULS_BREACHSTONE("tul's breachstone"),
     THE_SHORTCUT("the shortcut"),
     VIAL_OF_SUMMONING("vial of summoning"),
     ARMOURSMITHS_DELIRIUM_ORB("armoursmith's delirium orb"),
@@ -361,7 +361,7 @@ public enum ItemDefinitionEnum {
     SCREAMING_ESSENCE_OF_CONTEMPT("screaming essence of contempt"),
     THE_SHIELDBEARER("the shieldbearer"),
     ELEVATED_SEXTANT("elevated sextant"),
-    CHAYULAS_BREACHSTONE("Chayula's Breachstone"),
+    CHAYULAS_BREACHSTONE("chayula's breachstone"),
     GREATER_ELDRITCH_ICHOR("greater eldritch ichor"),
     WAILING_ESSENCE_OF_DOUBT("wailing essence of doubt"),
     GEMCUTTERS_MERCY("gemcutter's mercy"),
@@ -398,11 +398,11 @@ public enum ItemDefinitionEnum {
     private static final Map<String, ItemDefinitionEnum> stringMap;
 
     public static ItemDefinitionEnum fromString(String value) {
-        if(!ItemDefinitionEnum.contains(value)) {
-            throw new IllegalArgumentException("Unrecognized enum value, got " + value);
+        if(!ItemDefinitionEnum.contains(value.toLowerCase())) {
+            throw new IllegalArgumentException("Unrecognized enum value, got " + value.toLowerCase());
         }
 
-        return stringMap.get(value);
+        return stringMap.get(value.toLowerCase());
     }
 
     // questionable static use here tbh

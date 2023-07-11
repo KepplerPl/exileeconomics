@@ -34,8 +34,6 @@ public final class RequestHandler {
     }
 
     public String getResponseAsString(HttpURLConnection connection) throws IOException {
-//        return Files.readString(Paths.get("C:\\Users\\Mine\\Desktop\\exileeconomics\\test.json"));
-
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String inputLine;
         StringBuilder content = new StringBuilder();

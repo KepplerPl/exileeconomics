@@ -9,20 +9,21 @@ import com.example.exileeconomics.repository.ItemDefinitionsRepository;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class CurrencyRatio implements NoSuppressedRunnable {
-    private final Set<String> parsableCurrencies;
-    private volatile Map<ItemDefinitionEnum, Integer> currencyRatioMap = new HashMap<>();
+    private final Set<ItemDefinitionEnum> parsableCurrencies;
+    private volatile Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap;
     private final CurrencyRatioRepository currencyRatioRepository;
     private final ItemDefinitionsRepository itemDefinitionsRepository;
     private final CountDownLatch countDownLatch;
 
-    public Integer getRatioFor(ItemDefinitionEnum itemDefinitionEnum) {
+    public CurrencyRatioEntity getRatioFor(ItemDefinitionEnum itemDefinitionEnum) {
         return currencyRatioMap.get(itemDefinitionEnum);
     }
 
-    public CurrencyRatio(Set<String> parsableCurrencies, CurrencyRatioRepository currencyRatioRepository, ItemDefinitionsRepository itemDefinitionsRepository, CountDownLatch countDownLatch) {
+    public CurrencyRatio(Set<ItemDefinitionEnum> parsableCurrencies, CurrencyRatioRepository currencyRatioRepository, ItemDefinitionsRepository itemDefinitionsRepository, CountDownLatch countDownLatch) {
         this.parsableCurrencies = parsableCurrencies;
         this.currencyRatioRepository = currencyRatioRepository;
         this.itemDefinitionsRepository = itemDefinitionsRepository;
@@ -31,10 +32,14 @@ public class CurrencyRatio implements NoSuppressedRunnable {
 
     @Override
     public void doRun() {
-        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsRepository.findAllByNameIn(parsableCurrencies);
+        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsRepository.findAllByNameIn(
+                parsableCurrencies
+                        .stream()
+                        .map(ItemDefinitionEnum::getName)
+                        .collect(Collectors.toSet())
+        );
 
         int limit = parsableCurrencies.size();
-
         List<Long> longs = StreamSupport
                 .stream(itemDefinitionEntities.spliterator(), false)
                 .map(ItemDefinitionEntity::getId)
@@ -42,12 +47,13 @@ public class CurrencyRatio implements NoSuppressedRunnable {
 
         Collection<CurrencyRatioEntity> currencyRatioEntities = currencyRatioRepository.mostCurrentCurrencyRatio(longs, limit);
 
+        Map<ItemDefinitionEnum, CurrencyRatioEntity> modifableMap = new HashMap<>();
+
         for(CurrencyRatioEntity currencyRatio : currencyRatioEntities) {
-            currencyRatioMap.put(ItemDefinitionEnum.fromString(currencyRatio.getItemDefinition().getName().toLowerCase()), currencyRatio.getChaos());
+            modifableMap.put(ItemDefinitionEnum.fromString(currencyRatio.getItemDefinitionEntity().getName().toLowerCase()), currencyRatio);
         }
 
-        // one chaos is always equal to itself
-        currencyRatioMap.put(ItemDefinitionEnum.CHAOS_ORB, 1);
+        currencyRatioMap = Collections.unmodifiableMap(modifableMap);
 
         countDownLatch.countDown();
     }

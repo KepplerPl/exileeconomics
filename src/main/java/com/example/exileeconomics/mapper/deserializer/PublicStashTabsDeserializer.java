@@ -3,23 +3,21 @@ package com.example.exileeconomics.mapper.deserializer;
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.mapper.ItemDao;
 import com.example.exileeconomics.mapper.PublicStashTabsDao;
-import com.example.exileeconomics.price.PriceParser;
-import com.example.exileeconomics.price.exception.InvalidCurrencyException;
+import com.example.exileeconomics.price.SellableItemBuilder;
+import com.example.exileeconomics.price.SellableItem;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashTabsDao> {
-
     private final String activeLeague;
-    private final PriceParser parser;
+    private final SellableItemBuilder sellableItemBuilder;
 
-    public PublicStashTabsDeserializer(String activeLeague, PriceParser parser) {
+    public PublicStashTabsDeserializer(String activeLeague, SellableItemBuilder sellableItemBuilder) {
         this.activeLeague = activeLeague;
-        this.parser = parser;
+        this.sellableItemBuilder = sellableItemBuilder;
     }
 
     @Override
@@ -76,18 +74,20 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                 continue;
             }
 
-            BigDecimal price;
+            SellableItem sellableItem;
             try{
-                price = parser.parsePrice(itemJson.get("note").getAsString());
+                sellableItem = sellableItemBuilder.parsePrice(itemJson.get("note").getAsString());
             } catch (Exception e) {
                 continue;
             }
+            ItemDefinitionEnum itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("baseType").getAsString());
 
             ItemDao item = new ItemDao();
-
-            item.setPrice(price);
-            item.setStackSize(itemJson.get("stackSize").getAsInt());
-            item.setBaseType(itemJson.get("baseType").getAsString());
+            item.setPrice(sellableItem.getPrice());
+            item.setSoldQuantity(sellableItem.getSoldQuantity());
+            item.setTotalQuantity(itemJson.get("stackSize").getAsInt());
+            item.setItem(itemDefinitionEnum);
+            item.setCurrencyRatio(sellableItem.getCurrencyRatio());
 
             items.add(item);
         }

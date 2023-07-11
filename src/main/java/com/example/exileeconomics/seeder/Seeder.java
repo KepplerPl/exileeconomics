@@ -9,6 +9,7 @@ import com.example.exileeconomics.repository.ItemDefinitionsRepository;
 import com.example.exileeconomics.repository.NextIdRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -51,14 +52,20 @@ public class Seeder {
             ItemDefinitionEntity divineOrb = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.DIVINE_ORB.getName());
             CurrencyRatioEntity divineOrbToChaosRatio = new CurrencyRatioEntity();
             divineOrbToChaosRatio.setChaos(200);
-            divineOrbToChaosRatio.setItemDefinition(divineOrb);
+            divineOrbToChaosRatio.setItemDefinitionEntity(divineOrb);
             currencyRatioRepository.save(divineOrbToChaosRatio);
 
             ItemDefinitionEntity awakenedSextant = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
             CurrencyRatioEntity sextantToChaosRatio = new CurrencyRatioEntity();
             sextantToChaosRatio.setChaos(5);
-            sextantToChaosRatio.setItemDefinition(awakenedSextant);
+            sextantToChaosRatio.setItemDefinitionEntity(awakenedSextant);
             currencyRatioRepository.save(sextantToChaosRatio);
+
+            ItemDefinitionEntity chaos = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.CHAOS_ORB.getName());
+            CurrencyRatioEntity chaosToChaosRatio = new CurrencyRatioEntity();
+            chaosToChaosRatio.setChaos(1);
+            chaosToChaosRatio.setItemDefinitionEntity(chaos);
+            currencyRatioRepository.save(chaosToChaosRatio);
         }
     }
 

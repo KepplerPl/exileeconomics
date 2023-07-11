@@ -24,7 +24,7 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     private final RequestHandler requestHandler;
     private final ApiHeaderBag apiHeaderBag;
     private final NextIdRepository nextIdRepository;
-    private final CountDownLatch countDownLatch;
+    private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsProducer(
             BlockingQueue<String> nextIdQueue,
@@ -33,7 +33,7 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
             RequestHandler requestHandler,
             ApiHeaderBag apiHeaderBag,
             NextIdRepository nextIdRepository,
-            CountDownLatch countDownLatch
+            CountDownLatch countDownLatchForCurrencyRatioInitialization
     ) {
         this.nextIdQueue = nextIdQueue;
         this.jsonResponsesQueue = jsonResponsesQueue;
@@ -41,12 +41,13 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
         this.requestHandler = requestHandler;
         this.apiHeaderBag = apiHeaderBag;
         this.nextIdRepository = nextIdRepository;
-        this.countDownLatch = countDownLatch;
+        this.countDownLatchForCurrencyRatioInitialization = countDownLatchForCurrencyRatioInitialization;
     }
 
     @Override
     public void doRun() throws IOException, InterruptedException {
-        countDownLatch.await();
+        countDownLatchForCurrencyRatioInitialization.await();
+        long start = System.currentTimeMillis();
 
         if (!throttler.canDoRequest()) {
             System.out.println(Thread.currentThread().getName() + " tried to do a request but couldn't because hits are " + throttler.getCurrentCounter());
@@ -72,22 +73,29 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
         response = requestHandler.getPublicStashTabs(nextId);
         headers = response.getHeaderFields();
         apiHeaderBag.setHeaders(headers);
+        nextIdFromRequest = apiHeaderBag.extractNextId();
+
+        if(nextIdFromRequest.equals(nextId)) {
+            nextIdQueue.put(nextId);
+            throttler.setCurrentHitCount(2);
+            System.out.printf("Reaching the end of the river, with id %s waiting 30 seconds...%n", nextId);
+            Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+            return;
+        }
+
         throttler.setCurrentHitCount(apiHeaderBag.getCurrentXRateLimitHits());
         if (response.getResponseCode() == HttpStatus.TOO_MANY_REQUESTS.value()) {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(apiHeaderBag.getRetryAfter() + 2));
-            return;
+            Thread.sleep(TimeUnit.SECONDS.toMillis(apiHeaderBag.getRetryAfter() + 5));
         }
 
         responseBody = requestHandler.getResponseAsString(response);
 
-//        nextIdFromRequest = "1997435194-1992926428-1927712828-2137093406-2073944867";
-        nextIdFromRequest = apiHeaderBag.extractNextId();
         nextIdQueue.put(nextIdFromRequest);
         jsonResponsesQueue.put(responseBody);
 
         saveNextId(nextIdFromRequest);
-
-        System.out.println("Next ID: " + nextIdFromRequest);
+        long finish = System.currentTimeMillis();
+        System.out.println("Next ID: " + nextIdFromRequest + " took " + (finish - start));
     }
 
     private void saveNextId(String nextId) {
