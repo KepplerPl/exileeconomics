@@ -57,6 +57,9 @@ public class CurrencyRatioEventScheduler {
         ItemDefinitionEntity chaosOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
 
         Set<CurrencyRatioEntity> currencyRatioEntityList = new HashSet<>(5);
+
+        // TODO This approach is a very naive way of calculating the prices, must think of something better
+
         // divine average price calc
         ItemDefinitionEntity divineOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.DIVINE_ORB.getName());
         int divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity);
@@ -113,17 +116,6 @@ public class CurrencyRatioEventScheduler {
     }
 
     private int calculateAveragePriceForDivine(Timestamp now, Timestamp nowMinus12Hours, ItemDefinitionEntity chaosOrbEntity, ItemDefinitionEntity divineOrbEntity) throws CurrencyRatioException {
-        //int totalDivinesOnMarket = itemEntityRepository.getTotalItemsInBetweenDates(
-        //        divineOrbEntity.getId(),
-        //        DIVINE_SOLD_QUANTITY_UPPER_LIMIT,
-        //        nowMinus12Hours,
-        //        now
-        //);
-        // this is where it gets tricky, in order to properly calculate the correct average price
-        // ideally some percentage of items at the very start and very end need to be excluded
-        // how many exactly it's hard to tell, for now I'm going with 10% at the start from the total items
-        // and 30% of the total items at the end, since generally the very tail of the sold items are very
-        // skewed in price towards the very top
         int limit = 30;
         int offset = 0;
 
