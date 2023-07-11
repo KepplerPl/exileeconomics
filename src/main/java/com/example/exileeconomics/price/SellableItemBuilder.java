@@ -10,11 +10,10 @@ import java.math.RoundingMode;
 
 public class SellableItemBuilder {
     private final BigDecimal maxPrice;
+    private final CurrencyRatioProducer currencyRatioProducer;
 
-    private final CurrencyRatio currencyRatio;
-
-    public SellableItemBuilder(CurrencyRatio currencyRatio) {
-        this.currencyRatio = currencyRatio;
+    public SellableItemBuilder(CurrencyRatioProducer currencyRatioProducer) {
+        this.currencyRatioProducer = currencyRatioProducer;
         this.maxPrice = new BigDecimal(300_000);
     }
 
@@ -45,7 +44,7 @@ public class SellableItemBuilder {
 
         ParsableCurrencyEnum parsableCurrencyEnum = ParsableCurrencyEnum.fromString(parts[2]);
         ItemDefinitionEnum boughtFor = ParsableCurrencyEnum.parsableCurrencyEnumToItemDefinitionEnum(parsableCurrencyEnum);
-        CurrencyRatioEntity currencyRatioInChaos = currencyRatio.getRatioFor(boughtFor);
+        CurrencyRatioEntity currencyRatioInChaos = currencyRatioProducer.getRatioFor(boughtFor);
         BigDecimal currencyRatio = new BigDecimal(currencyRatioInChaos.getChaos());
 
         BigDecimal resultingPrice;

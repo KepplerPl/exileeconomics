@@ -9,7 +9,7 @@ import com.example.exileeconomics.http.RequestHandler;
 import com.example.exileeconomics.http.Throttler;
 import com.example.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
 import com.example.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
-import com.example.exileeconomics.price.CurrencyRatio;
+import com.example.exileeconomics.price.CurrencyRatioProducer;
 import com.example.exileeconomics.price.SellableItemBuilder;
 import com.example.exileeconomics.producer_consumer.consumer.PublicStashTabsConsumer;
 import com.example.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class PublicStashTabsOrchestrator {
     private final ApiHeaderBag apiHeaderBag;
     private final Throttler throttler;
     private final CurrencyRatioRepository currencyRatioRepository;
-    private CurrencyRatio currencyRatio;
+    private CurrencyRatioProducer currencyRatioProducer;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsOrchestrator(
@@ -75,7 +76,8 @@ public class PublicStashTabsOrchestrator {
                 ItemDefinitionEnum.DIVINE_ORB,
                 ItemDefinitionEnum.AWAKENED_SEXTANT)
         );
-        currencyRatio = new CurrencyRatio(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository, countDownLatchForCurrencyRatioInitialization);
+        currencyRatioProducer = new CurrencyRatioProducer(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository);
+        currencyRatioProducer.setCountDownLatch(countDownLatchForCurrencyRatioInitialization);
     }
 
     @EventListener
@@ -91,8 +93,7 @@ public class PublicStashTabsOrchestrator {
     }
 
     private void startCurrencyRatioUpdater() {
-        executorService.schedule(currencyRatio, 0, TimeUnit.MILLISECONDS); // run it once to get it going
-        executorService.scheduleWithFixedDelay(currencyRatio, 0, 6, TimeUnit.HOURS);
+        executorService.schedule(currencyRatioProducer, 0, TimeUnit.MILLISECONDS); // run it once to get it going
     }
 
     private void startPublicStashConsumer() {
@@ -100,7 +101,7 @@ public class PublicStashTabsOrchestrator {
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
                 new PublicStashTabsDeserializer(
                         properties.getActiveLeague(),
-                        new SellableItemBuilder(currencyRatio)
+                        new SellableItemBuilder(currencyRatioProducer)
                 )
         );
 

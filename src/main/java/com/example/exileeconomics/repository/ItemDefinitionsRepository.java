@@ -9,7 +9,6 @@ import java.util.Set;
 @Repository
 public interface ItemDefinitionsRepository extends CrudRepository<ItemDefinitionEntity, Long> {
     ItemDefinitionEntity getItemDefinitionByName(String name);
-
     Iterable<ItemDefinitionEntity> findAllByNameIn(Set<String> name);
-
+    ItemDefinitionEntity getFirstByName(String name);
 }

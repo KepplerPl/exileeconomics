@@ -11,7 +11,6 @@ import java.util.List;
 
 @Repository
 public interface CurrencyRatioRepository extends CrudRepository<CurrencyRatioEntity, Long> {
-
     @Query(
             value = "SELECT * FROM currency_ratio WHERE item_definition_entity_id in (:list) ORDER BY created_at DESC LIMIT :limit",
             nativeQuery = true
