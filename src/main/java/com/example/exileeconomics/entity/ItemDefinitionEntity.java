@@ -1,7 +1,6 @@
 package com.example.exileeconomics.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
@@ -42,9 +41,5 @@ public class ItemDefinitionEntity extends AbstractEntity{
 
     public Timestamp getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
     }
 }

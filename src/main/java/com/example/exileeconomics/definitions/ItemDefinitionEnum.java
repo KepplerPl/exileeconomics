@@ -394,22 +394,6 @@ public enum ItemDefinitionEnum {
     RUSTED_RELIQUARY_SCARAB("rusted reliquary scarab")
     ;
 
-    private static final Set<String> enumAsString = new HashSet<>();
-    private static final Map<String, ItemDefinitionEnum> stringMap;
-
-    public static ItemDefinitionEnum fromString(String value) {
-        if(!ItemDefinitionEnum.contains(value.toLowerCase())) {
-            throw new IllegalArgumentException("Unrecognized enum value, got " + value.toLowerCase());
-        }
-
-        return stringMap.get(value.toLowerCase());
-    }
-
-    // questionable static use here tbh
-    public static boolean contains(String name) {
-        return enumAsString.contains(name.toLowerCase());
-    }
-
     private final String name;
 
     ItemDefinitionEnum(String name) {
@@ -420,12 +404,21 @@ public enum ItemDefinitionEnum {
         return name;
     }
 
-    static {
-        stringMap = Arrays.stream(values())
-                .collect(Collectors.toMap(ItemDefinitionEnum::getName, Function.identity()));
+    private static final Map<String, ItemDefinitionEnum> stringMap;
 
-        for (ItemDefinitionEnum c : ItemDefinitionEnum.values()) {
-            ItemDefinitionEnum.enumAsString.add(c.getName());
+    public static ItemDefinitionEnum fromString(String value) {
+        if(!ItemDefinitionEnum.contains(value.toLowerCase())) {
+            throw new IllegalArgumentException(String.format("Unrecognized enum value, got %s", value.toLowerCase()));
         }
+
+        return stringMap.get(value.toLowerCase());
+    }
+
+    public static boolean contains(String name) {
+        return stringMap.containsKey(name.toLowerCase());
+    }
+
+    static {
+        stringMap = Arrays.stream(values()).collect(Collectors.toMap(ItemDefinitionEnum::getName, Function.identity()));
     }
 }

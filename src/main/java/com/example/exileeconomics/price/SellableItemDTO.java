@@ -1,14 +1,12 @@
 package com.example.exileeconomics.price;
 
-import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.entity.CurrencyRatioEntity;
 
 import java.math.BigDecimal;
 
-public class SellableItem {
+public class SellableItemDTO {
     private BigDecimal price;
     private CurrencyRatioEntity currencyRatio;
-    private int totalQuantity;
     private int soldQuantity;
 
     public CurrencyRatioEntity getCurrencyRatio() {
@@ -25,14 +23,6 @@ public class SellableItem {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public int getTotalQuantity() {
-        return totalQuantity;
-    }
-
-    public void setTotalQuantity(int totalQuantity) {
-        this.totalQuantity = totalQuantity;
     }
 
     public int getSoldQuantity() {

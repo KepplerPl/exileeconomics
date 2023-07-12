@@ -4,7 +4,7 @@ import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.mapper.ItemDao;
 import com.example.exileeconomics.mapper.PublicStashTabsDao;
 import com.example.exileeconomics.price.SellableItemBuilder;
-import com.example.exileeconomics.price.SellableItem;
+import com.example.exileeconomics.price.SellableItemDTO;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -74,20 +74,21 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                 continue;
             }
 
-            SellableItem sellableItem;
+            SellableItemDTO sellableItemDTO;
             try{
-                sellableItem = sellableItemBuilder.parsePrice(itemJson.get("note").getAsString());
+                sellableItemDTO = sellableItemBuilder.parsePrice(itemJson.get("note").getAsString());
             } catch (Exception e) {
                 continue;
             }
+
             ItemDefinitionEnum itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("baseType").getAsString());
 
             ItemDao item = new ItemDao();
-            item.setPrice(sellableItem.getPrice());
-            item.setSoldQuantity(sellableItem.getSoldQuantity());
+            item.setPrice(sellableItemDTO.getPrice());
+            item.setSoldQuantity(sellableItemDTO.getSoldQuantity());
             item.setTotalQuantity(itemJson.get("stackSize").getAsInt());
             item.setItem(itemDefinitionEnum);
-            item.setCurrencyRatio(sellableItem.getCurrencyRatio());
+            item.setCurrencyRatio(sellableItemDTO.getCurrencyRatio());
 
             items.add(item);
         }

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,14 +28,12 @@ import java.util.concurrent.*;
 
 @Service
 public final class PublicStashTabsOrchestrator {
-
     private final RequestHandler requestHandler;
     private final Properties properties;
     private final NextIdRepository nextIdRepository;
     private final ItemDefinitionsRepository itemDefinitionsRepository;
     private final ItemEntityRepository itemEntityRepository;
-    private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(100);
-    private final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
+    private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(50);
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private final CurrencyRatioRepository currencyRatioRepository;
     private CurrencyRatioProducer currencyRatioProducer;
@@ -46,8 +45,9 @@ public final class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsRepository itemDefinitionsRepository,
             @Autowired NextIdRepository nextIdRepository,
             @Autowired ItemEntityRepository itemEntityRepository,
-            @Autowired CurrencyRatioRepository currencyRatioRepository
-    ) {
+            @Autowired CurrencyRatioRepository currencyRatioRepository,
+            @Autowired RedisTemplate<String, String> redisTemplate
+            ) {
         this.requestHandler = requestHandler;
         this.properties = properties;
         this.itemEntityRepository = itemEntityRepository;
@@ -59,8 +59,7 @@ public final class PublicStashTabsOrchestrator {
 
     @EventListener
     @Order(value = 2)
-    public void onApplicationEvent(ApplicationReadyEvent event) throws InterruptedException {
-        setItemDefinitions();
+    public void onApplicationEvent(ApplicationReadyEvent event){
         initCurrencyRatio();
 
         startCurrencyRatioUpdater();
@@ -79,11 +78,11 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void startCurrencyRatioUpdater() {
-        executorService.schedule(currencyRatioProducer, 0, TimeUnit.MILLISECONDS); // run it once to get it going
+        // this needs to be run once to get the latest currency ratio from the database
+        executorService.schedule(currencyRatioProducer, 0, TimeUnit.MILLISECONDS);
     }
 
     private void startPublicStashConsumer() {
-
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
                 new PublicStashTabsDeserializer(
                         properties.getActiveLeague(),
@@ -93,7 +92,7 @@ public final class PublicStashTabsOrchestrator {
 
         PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
                 jsonResponsesQueue,
-                itemDefinitions,
+                getItemDefinitions(),
                 itemEntityRepository,
                 countDownLatchForCurrencyRatioInitialization,
                 publicStashTabsDeserializerFromJson
@@ -113,10 +112,14 @@ public final class PublicStashTabsOrchestrator {
         executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 200, TimeUnit.MILLISECONDS);
     }
 
-    private void setItemDefinitions() {
+    private HashMap<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
         Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsRepository.findAll();
+        final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
+
         for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {
             itemDefinitions.put(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()), itemDefinitionEntity);
         }
+
+        return itemDefinitions;
     }
 }

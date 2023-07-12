@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationEvent;
 import java.util.Map;
 
 public class CurrencyRatioUpdateEvent extends ApplicationEvent {
-    private Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap;
+    private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap;
 
     public CurrencyRatioUpdateEvent(Object source, Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
         super(source);

@@ -82,11 +82,11 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
             }
 
             responseBody = requestHandler.getResponseAsString(response);
+            jsonResponsesQueue.put(responseBody);
+            saveNextId(nextIdFromRequest);
 
             nextIdQueue.put(nextIdFromRequest);
-            jsonResponsesQueue.put(responseBody);
 
-            saveNextId(nextIdFromRequest);
             long finish = System.currentTimeMillis();
             System.out.printf("Next ID: %s took %s %n", nextIdFromRequest, (finish - start) );
         }
@@ -96,7 +96,7 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
         if (!throttler.canDoRequest()) {
             System.out.println(Thread.currentThread().getName() + " tried to do a request but couldn't because hits are " + throttler.getCurrentCounter());
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(apiHeaderBag.getCurrentXRateLimitTestedPeriod()));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(60));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

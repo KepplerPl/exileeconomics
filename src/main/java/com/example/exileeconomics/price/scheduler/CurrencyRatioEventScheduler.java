@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -41,9 +42,9 @@ public class CurrencyRatioEventScheduler {
     }
 
     // At minute 0 past every 21st hour from 9 through 23.
-    // Or in simpler terms runs at 9AM and again at 11PM, so twice a day
-//    @Scheduled(cron = "0 0 9/21 * * *")
-    @Scheduled(fixedRate = 999999999)
+    // Or in simpler terms runs at 9AM and again at 11PM, twice a day
+    @Transactional(rollbackFor = { RuntimeException.class, Error.class, CurrencyRatioException.class })
+    @Scheduled(cron = "0 0 9/21 * * *")
     public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItems_Every12Hours() throws CurrencyRatioException {
         Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
@@ -89,7 +90,7 @@ public class CurrencyRatioEventScheduler {
         currencyRatioEntityList.add(chaosCurrencyRatio);
         currencyRatioMap.put(ItemDefinitionEnum.CHAOS_ORB, chaosCurrencyRatio);
 
-        // save after getting both so that an exception can trigger if that's the case
+        // save after getting all so that an exception can trigger if anything goes wrong
         currencyRatioRepository.saveAll(currencyRatioEntityList);
 
         publishCurrencyRatioRecalculatedEvent(currencyRatioMap);

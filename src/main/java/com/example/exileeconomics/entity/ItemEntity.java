@@ -89,8 +89,4 @@ public class ItemEntity extends AbstractEntity{
     public Timestamp getCreatedAt() {
         return createdAt;
     }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
 }

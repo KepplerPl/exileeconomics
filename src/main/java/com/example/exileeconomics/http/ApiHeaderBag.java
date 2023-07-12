@@ -7,15 +7,15 @@ import java.util.Map;
 public class ApiHeaderBag {
     private Map<String, List<String>> headers = new HashMap<>();
 
-    public synchronized void setHeaders(Map<String, List<String>> headers) {
+    public void setHeaders(Map<String, List<String>> headers) {
         this.headers = headers;
     }
 
-    public synchronized String extractNextId() {
+    public String extractNextId() {
         return headers.get("X-Next-Change-Id").get(0);
     }
 
-    public synchronized String getHeaderValue(String value) {
+    public String getHeaderValue(String value) {
         if(headers.containsKey(value) && !headers.get(value).isEmpty()) {
             return headers.get(value).get(0);
         }
@@ -23,7 +23,7 @@ public class ApiHeaderBag {
         return "";
     }
 
-    public synchronized int getRetryAfter() {
+    public int getRetryAfter() {
         if(!headers.containsKey("Retry-After")) {
             return 0;
         }
@@ -41,11 +41,11 @@ public class ApiHeaderBag {
         return getHeaderValue(String.format("X-Rate-Limit-%s", ruleName)).trim().split(":");
     }
 
-    public synchronized int getCurrentXRateLimitHits() {
+    public int getCurrentXRateLimitHits() {
         return Integer.parseInt(getCurrentXRateLimit()[0]);
     }
 
-    public synchronized int getCurrentXRateLimitTestedPeriod() {
+    public int getCurrentXRateLimitTestedPeriod() {
         return Integer.parseInt(getCurrentXRateLimit()[1]);
     }
 }

@@ -7,8 +7,15 @@ import com.example.exileeconomics.price.exception.InvalidPriceException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 
 public class SellableItemBuilder {
+    private final HashMap<String, ItemDefinitionEnum> currencyApiNameToEnum = new HashMap<>(){{
+       put("chaos", ItemDefinitionEnum.CHAOS_ORB);
+       put("divine", ItemDefinitionEnum.DIVINE_ORB);
+       put("awakened-sextant", ItemDefinitionEnum.AWAKENED_SEXTANT);
+    }};
+
     private final BigDecimal maxPrice;
     private final CurrencyRatioProducer currencyRatioProducer;
 
@@ -17,16 +24,10 @@ public class SellableItemBuilder {
         this.maxPrice = new BigDecimal(300_000);
     }
 
-    public SellableItem parsePrice(String price) throws InvalidCurrencyException, InvalidPriceException {
+    public SellableItemDTO parsePrice(String price) throws InvalidCurrencyException, InvalidPriceException {
         String[] parts = price.split(" ");
         if(parts.length < 3) {
             throw new InvalidCurrencyException(String.format("Cannot parse currency %s", price));
-        }
-
-        // check if the currency in which the sold item is listed is in one of the 3 acceptable currencies
-        String currency = parts[2];
-        if(!ParsableCurrencyEnum.contains(currency)) {
-            throw new InvalidCurrencyException(String.format("Currency %s is not recognized as a valid currency", currency));
         }
 
         // the actual price is always the 2nd part of the string
@@ -42,14 +43,17 @@ public class SellableItemBuilder {
             throw new InvalidPriceException(String.format("Price %s is not recognized as a valid price", price));
         }
 
-        ParsableCurrencyEnum parsableCurrencyEnum = ParsableCurrencyEnum.fromString(parts[2]);
-        ItemDefinitionEnum boughtFor = ParsableCurrencyEnum.parsableCurrencyEnumToItemDefinitionEnum(parsableCurrencyEnum);
+        if(!currencyApiNameToEnum.containsKey(parts[2])) {
+            throw new InvalidCurrencyException(String.format("Currency %s is not recognized as a valid currency", parts[2]));
+        }
+
+        ItemDefinitionEnum boughtFor = currencyApiNameToEnum.get(parts[2]);
         CurrencyRatioEntity currencyRatioInChaos = currencyRatioProducer.getRatioFor(boughtFor);
         BigDecimal currencyRatio = new BigDecimal(currencyRatioInChaos.getChaos());
 
         BigDecimal resultingPrice;
 
-        SellableItem sellableItem = new SellableItem();
+        SellableItemDTO sellableItemDTO = new SellableItemDTO();
 
         if(price.contains("/")) {
             String[] fractionParts = price.split("/");
@@ -60,22 +64,22 @@ public class SellableItemBuilder {
             BigDecimal denominatorBigDecimal = new BigDecimal(denominator);
 
             resultingPrice = numeratorBigDecimal.divide(denominatorBigDecimal, 4, RoundingMode.HALF_DOWN);
-            sellableItem.setSoldQuantity(denominator);
+            sellableItemDTO.setSoldQuantity(denominator);
         }else{
             resultingPrice = BigDecimal
                     .valueOf(Double.parseDouble(price))
                     .multiply(currencyRatio)
                     .setScale(4, RoundingMode.HALF_DOWN);
-            sellableItem.setSoldQuantity(1);
+            sellableItemDTO.setSoldQuantity(1);
         }
 
         if(resultingPrice.compareTo(maxPrice) > 0) {
             throw new InvalidPriceException(String.format("Price is too large, got %s", price));
         }
 
-        sellableItem.setPrice(resultingPrice);
-        sellableItem.setCurrencyRatio(currencyRatioInChaos);
+        sellableItemDTO.setPrice(resultingPrice);
+        sellableItemDTO.setCurrencyRatio(currencyRatioInChaos);
 
-        return sellableItem;
+        return sellableItemDTO;
     }
 }
