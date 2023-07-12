@@ -77,7 +77,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable{
                 itemEntityList.add(itemEntity);
             }
 
-            System.out.println("Saving a total of " + itemEntityList.size() + " items to database");
+            System.out.printf("Saving a total of %s items to database%n", itemEntityList.size());
 
             itemEntityRepository.saveAll(itemEntityList);
         }

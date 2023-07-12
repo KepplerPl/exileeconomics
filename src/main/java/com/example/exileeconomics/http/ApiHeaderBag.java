@@ -1,20 +1,17 @@
 package com.example.exileeconomics.http;
 
-import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
 public class ApiHeaderBag {
-    private volatile Map<String, List<String>> headers = new HashMap<>();
+    private Map<String, List<String>> headers = new HashMap<>();
 
     public synchronized void setHeaders(Map<String, List<String>> headers) {
         this.headers = headers;
     }
 
-    public String extractNextId() {
+    public synchronized String extractNextId() {
         return headers.get("X-Next-Change-Id").get(0);
     }
 
@@ -26,7 +23,7 @@ public class ApiHeaderBag {
         return "";
     }
 
-    public int getRetryAfter() {
+    public synchronized int getRetryAfter() {
         if(!headers.containsKey("Retry-After")) {
             return 0;
         }
@@ -44,20 +41,11 @@ public class ApiHeaderBag {
         return getHeaderValue(String.format("X-Rate-Limit-%s", ruleName)).trim().split(":");
     }
 
-    public int getCurrentXRateLimitHits() {
+    public synchronized int getCurrentXRateLimitHits() {
         return Integer.parseInt(getCurrentXRateLimit()[0]);
     }
 
-
-    public int getCurrentXRateLimitTestedPeriod() {
+    public synchronized int getCurrentXRateLimitTestedPeriod() {
         return Integer.parseInt(getCurrentXRateLimit()[1]);
-    }
-
-    public int getXRateLimitMaximumHits() {
-        return Integer.parseInt(getXRateLimit()[0]);
-    }
-
-    public int getXRateLimitTestedPeriod() {
-        return Integer.parseInt(getXRateLimit()[1]);
     }
 }

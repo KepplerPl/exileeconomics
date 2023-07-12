@@ -20,7 +20,7 @@ public class SellableItemBuilder {
     public SellableItem parsePrice(String price) throws InvalidCurrencyException, InvalidPriceException {
         String[] parts = price.split(" ");
         if(parts.length < 3) {
-            throw new InvalidCurrencyException("Cannot parse currency " + price);
+            throw new InvalidCurrencyException(String.format("Cannot parse currency %s", price));
         }
 
         // check if the currency in which the sold item is listed is in one of the 3 acceptable currencies
@@ -70,7 +70,7 @@ public class SellableItemBuilder {
         }
 
         if(resultingPrice.compareTo(maxPrice) > 0) {
-            throw new InvalidPriceException("Price is too large, got " + price);
+            throw new InvalidPriceException(String.format("Price is too large, got %s", price));
         }
 
         sellableItem.setPrice(resultingPrice);

@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Service()
 public class Throttler {
     private final AtomicInteger currentHitCount = new AtomicInteger(5);
 
@@ -12,19 +11,19 @@ public class Throttler {
         currentHitCount.set(5);
     }
 
-    public synchronized int decrement() {
+    public int decrement() {
         return currentHitCount.decrementAndGet();
     }
 
-    public synchronized boolean canDoRequest() {
+    public boolean canDoRequest() {
         return currentHitCount.get() > 0;
     }
 
-    public synchronized int getCurrentCounter() {
+    public int getCurrentCounter() {
         return currentHitCount.get();
     }
 
-    public synchronized void setCurrentHitCount(int currentHitCount) {
+    public void setCurrentHitCount(int currentHitCount) {
         this.currentHitCount.set(currentHitCount);
     }
 

@@ -3,7 +3,6 @@ package com.example.exileeconomics.producer_consumer;
 import com.example.exileeconomics.Properties;
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
 import com.example.exileeconomics.entity.ItemDefinitionEntity;
-import com.example.exileeconomics.entity.NextIdEntity;
 import com.example.exileeconomics.http.ApiHeaderBag;
 import com.example.exileeconomics.http.RequestHandler;
 import com.example.exileeconomics.http.Throttler;
@@ -21,27 +20,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.util.*;
 import java.util.concurrent.*;
 
 @Service
-public class PublicStashTabsOrchestrator {
+public final class PublicStashTabsOrchestrator {
+
     private final RequestHandler requestHandler;
     private final Properties properties;
     private final NextIdRepository nextIdRepository;
     private final ItemDefinitionsRepository itemDefinitionsRepository;
     private final ItemEntityRepository itemEntityRepository;
-    private final BlockingQueue<String> nextIdQueue = new ArrayBlockingQueue<>(10);
     private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(100);
     private final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3);
-    private final ApiHeaderBag apiHeaderBag;
-    private final Throttler throttler;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private final CurrencyRatioRepository currencyRatioRepository;
     private CurrencyRatioProducer currencyRatioProducer;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
@@ -52,8 +46,6 @@ public class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsRepository itemDefinitionsRepository,
             @Autowired NextIdRepository nextIdRepository,
             @Autowired ItemEntityRepository itemEntityRepository,
-            @Autowired ApiHeaderBag apiHeaderBag,
-            @Autowired Throttler throttler,
             @Autowired CurrencyRatioRepository currencyRatioRepository
     ) {
         this.requestHandler = requestHandler;
@@ -61,13 +53,19 @@ public class PublicStashTabsOrchestrator {
         this.itemEntityRepository = itemEntityRepository;
         this.itemDefinitionsRepository = itemDefinitionsRepository;
         this.nextIdRepository = nextIdRepository;
-        this.apiHeaderBag = apiHeaderBag;
-        this.throttler = throttler;
         this.currencyRatioRepository = currencyRatioRepository;
-
         countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
+    }
 
+    @EventListener
+    @Order(value = 2)
+    public void onApplicationEvent(ApplicationReadyEvent event) throws InterruptedException {
+        setItemDefinitions();
         initCurrencyRatio();
+
+        startCurrencyRatioUpdater();
+        startPublicStashProducer();
+        startPublicStashConsumer();
     }
 
     private void initCurrencyRatio() {
@@ -78,18 +76,6 @@ public class PublicStashTabsOrchestrator {
         );
         currencyRatioProducer = new CurrencyRatioProducer(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository);
         currencyRatioProducer.setCountDownLatch(countDownLatchForCurrencyRatioInitialization);
-    }
-
-    @EventListener
-    @Order(value = 2)
-    public void onApplicationEvent(ApplicationReadyEvent event) throws InterruptedException {
-        setCurrentNextId();
-        setItemDefinitions();
-        setInitialHeaders();
-
-        startCurrencyRatioUpdater();
-        startPublicStashProducer();
-        startPublicStashConsumer();
     }
 
     private void startCurrencyRatioUpdater() {
@@ -117,41 +103,20 @@ public class PublicStashTabsOrchestrator {
 
     private void startPublicStashProducer() {
         PublicStashTabsProducer publicStashTabsProducer = new PublicStashTabsProducer(
-                nextIdQueue,
                 jsonResponsesQueue,
-                throttler,
+                new Throttler(),
                 requestHandler,
-                apiHeaderBag,
+                new ApiHeaderBag(),
                 nextIdRepository,
                 countDownLatchForCurrencyRatioInitialization
         );
-        executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 10, TimeUnit.MILLISECONDS);
-    }
-
-    private void setInitialHeaders() {
-        try {
-            String nextId = nextIdQueue.peek();
-            HttpURLConnection request = requestHandler.getPublicStashTabs(nextId);
-            Map<String, List<String>> headers = request.getHeaderFields();
-            apiHeaderBag.setHeaders(headers);
-        } catch (IOException e) {
-            System.out.println("function setInitialHeaders tried to poll nextId but gave up after waiting 10 seconds");
-            throw new RuntimeException(e);
-        }
+        executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 200, TimeUnit.MILLISECONDS);
     }
 
     private void setItemDefinitions() {
         Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsRepository.findAll();
         for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {
             itemDefinitions.put(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()), itemDefinitionEntity);
-        }
-    }
-
-    private void setCurrentNextId() throws InterruptedException {
-        Collection<NextIdEntity> nextIdEntities = nextIdRepository.mostCurrentNextId();
-        if (nextIdEntities.stream().findFirst().isPresent()) {
-            NextIdEntity nextIdEntity = nextIdEntities.stream().findFirst().get();
-            nextIdQueue.put(nextIdEntity.getNextId());
         }
     }
 }

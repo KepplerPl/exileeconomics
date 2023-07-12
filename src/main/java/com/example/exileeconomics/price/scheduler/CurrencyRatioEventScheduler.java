@@ -35,14 +35,15 @@ public class CurrencyRatioEventScheduler {
         this.itemDefinitionsRepository = itemDefinitionsRepository;
     }
 
-    public void publishCustomEvent(Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
+    public void publishCurrencyRatioRecalculatedEvent(Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
         CurrencyRatioUpdateEvent customSpringEvent = new CurrencyRatioUpdateEvent(this, currencyRatioMap);
         applicationEventPublisher.publishEvent(customSpringEvent);
     }
 
     // At minute 0 past every 21st hour from 9 through 23.
     // Or in simpler terms runs at 9AM and again at 11PM, so twice a day
-    @Scheduled(cron = "0 0 9/21 * * *")
+//    @Scheduled(cron = "0 0 9/21 * * *")
+    @Scheduled(fixedRate = 999999999)
     public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItems_Every12Hours() throws CurrencyRatioException {
         Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
@@ -80,7 +81,6 @@ public class CurrencyRatioEventScheduler {
         currencyRatioEntityList.add(sextantCurrencyRatio);
         currencyRatioMap.put(ItemDefinitionEnum.AWAKENED_SEXTANT, sextantCurrencyRatio);
 
-
         // add one for chaos as well, even though it's not calculated
         ItemDefinitionEntity chaosEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
         CurrencyRatioEntity chaosCurrencyRatio = new CurrencyRatioEntity();
@@ -92,7 +92,7 @@ public class CurrencyRatioEventScheduler {
         // save after getting both so that an exception can trigger if that's the case
         currencyRatioRepository.saveAll(currencyRatioEntityList);
 
-        publishCustomEvent(currencyRatioMap);
+        publishCurrencyRatioRecalculatedEvent(currencyRatioMap);
     }
 
     private int calculateAveragePriceForSextant(Timestamp now, Timestamp nowMinus12Hours, ItemDefinitionEntity chaosOrbEntity, ItemDefinitionEntity sextantEntity) throws CurrencyRatioException {
