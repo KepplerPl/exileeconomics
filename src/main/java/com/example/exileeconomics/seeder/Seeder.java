@@ -14,6 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -50,19 +51,19 @@ public class Seeder {
         if(!currencyRatioRepository.findAll().iterator().hasNext()) {
             ItemDefinitionEntity divineOrb = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.DIVINE_ORB.getName());
             CurrencyRatioEntity divineOrbToChaosRatio = new CurrencyRatioEntity();
-            divineOrbToChaosRatio.setChaos(200);
+            divineOrbToChaosRatio.setChaos(new BigDecimal(186));
             divineOrbToChaosRatio.setItemDefinitionEntity(divineOrb);
             currencyRatioRepository.save(divineOrbToChaosRatio);
 
             ItemDefinitionEntity awakenedSextant = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
             CurrencyRatioEntity sextantToChaosRatio = new CurrencyRatioEntity();
-            sextantToChaosRatio.setChaos(5);
+            sextantToChaosRatio.setChaos(new BigDecimal(5));
             sextantToChaosRatio.setItemDefinitionEntity(awakenedSextant);
             currencyRatioRepository.save(sextantToChaosRatio);
 
             ItemDefinitionEntity chaos = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.CHAOS_ORB.getName());
             CurrencyRatioEntity chaosToChaosRatio = new CurrencyRatioEntity();
-            chaosToChaosRatio.setChaos(1);
+            chaosToChaosRatio.setChaos(new BigDecimal(1));
             chaosToChaosRatio.setItemDefinitionEntity(chaos);
             currencyRatioRepository.save(chaosToChaosRatio);
         }
@@ -94,7 +95,7 @@ public class Seeder {
     private void seedNextId() {
         if(!nextIdRepository.findAll().iterator().hasNext()) {
             NextIdEntity nextIdEntity = new NextIdEntity();
-            nextIdEntity.setNextId("1997310912-1992768933-1927582781-2136932361-2073806912");
+            nextIdEntity.setNextId("2000728804-1996698714-1930863570-2140969949-2077177458");
             nextIdRepository.save(nextIdEntity);
         }
     }

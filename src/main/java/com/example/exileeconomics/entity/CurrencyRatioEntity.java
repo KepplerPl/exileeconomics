@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @EqualsAndHashCode(callSuper = true)
@@ -14,7 +15,7 @@ public class CurrencyRatioEntity extends AbstractEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private Integer chaos;
+    private BigDecimal chaos;
     protected Timestamp createdAt;
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private ItemDefinitionEntity itemDefinitionEntity;
@@ -32,12 +33,16 @@ public class CurrencyRatioEntity extends AbstractEntity{
         this.id = id;
     }
 
-    public Integer getChaos() {
+    public BigDecimal getChaos() {
         return chaos;
     }
 
-    public void setChaos(Integer chaos) {
+    public void setChaos(BigDecimal chaos) {
         this.chaos = chaos;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Timestamp getCreatedAt() {

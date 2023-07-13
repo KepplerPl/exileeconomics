@@ -49,7 +49,7 @@ public class SellableItemBuilder {
 
         ItemDefinitionEnum boughtFor = currencyApiNameToEnum.get(parts[2]);
         CurrencyRatioEntity currencyRatioInChaos = currencyRatioProducer.getRatioFor(boughtFor);
-        BigDecimal currencyRatio = new BigDecimal(currencyRatioInChaos.getChaos());
+        BigDecimal currencyRatio = currencyRatioInChaos.getChaos();
 
         BigDecimal resultingPrice;
 
