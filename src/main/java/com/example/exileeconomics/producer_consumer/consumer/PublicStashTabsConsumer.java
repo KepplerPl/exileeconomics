@@ -4,8 +4,8 @@ import com.example.exileeconomics.producer_consumer.NoSuppressedRunnable;
 
 import com.example.exileeconomics.entity.ItemEntity;
 import com.example.exileeconomics.entity.ItemDefinitionEntity;
-import com.example.exileeconomics.mapper.ItemDao;
-import com.example.exileeconomics.mapper.PublicStashTabsDao;
+import com.example.exileeconomics.mapper.ItemDTO;
+import com.example.exileeconomics.mapper.PublicStashTabsDTO;
 import com.example.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
 import com.example.exileeconomics.repository.ItemEntityRepository;
 import com.google.gson.GsonBuilder;
@@ -48,31 +48,31 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable{
 
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(
-                PublicStashTabsDao.class,
+                PublicStashTabsDTO.class,
                 publicStashTabsDeserializerFromJson
         );
 
         while(jsonResponsesQueue.iterator().hasNext()) {
-            PublicStashTabsDao publicStashTabsDao = builder
+            PublicStashTabsDTO publicStashTabsDTO = builder
                     .create()
-                    .fromJson(jsonResponsesQueue.take(), PublicStashTabsDao.class);
+                    .fromJson(jsonResponsesQueue.take(), PublicStashTabsDTO.class);
 
-            saveItems(publicStashTabsDao);
+            saveItems(publicStashTabsDTO);
         }
 
         System.out.printf("Queue now has %d items%n", jsonResponsesQueue.size());
     }
 
-    private void saveItems(PublicStashTabsDao publicStashTabsDao) {
+    private void saveItems(PublicStashTabsDTO publicStashTabsDTO) {
         List<ItemEntity> itemEntityList = new ArrayList<>();
-        if (!publicStashTabsDao.getItemDaos().isEmpty()) {
-            for (ItemDao itemDao : publicStashTabsDao.getItemDaos()) {
+        if (!publicStashTabsDTO.getItemDTOS().isEmpty()) {
+            for (ItemDTO itemDTO : publicStashTabsDTO.getItemDTOS()) {
                 ItemEntity itemEntity = new ItemEntity();
-                itemEntity.setPrice(itemDao.getPrice());
-                itemEntity.setSoldQuantity(itemDao.getSoldQuantity());
-                itemEntity.setTotalQuantity(itemDao.getTotalQuantity());
-                itemEntity.setItem(itemDefinitions.get(itemDao.getItem()));
-                itemEntity.setCurrencyRatio(itemDao.getCurrencyRatio());
+                itemEntity.setPrice(itemDTO.getPrice());
+                itemEntity.setSoldQuantity(itemDTO.getSoldQuantity());
+                itemEntity.setTotalQuantity(itemDTO.getTotalQuantity());
+                itemEntity.setItem(itemDefinitions.get(itemDTO.getItem()));
+                itemEntity.setCurrencyRatio(itemDTO.getCurrencyRatio());
 
                 itemEntityList.add(itemEntity);
             }

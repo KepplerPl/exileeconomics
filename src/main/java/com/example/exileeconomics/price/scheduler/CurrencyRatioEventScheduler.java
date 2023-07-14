@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -26,6 +25,7 @@ public class CurrencyRatioEventScheduler {
     private final CurrencyRatioRepository currencyRatioRepository;
     private final ItemEntityRepository itemEntityRepository;
     private final ItemDefinitionsRepository itemDefinitionsRepository;
+    private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
     /**
      * I noticed that 40 items is generally the sweet spot for a correct average price
@@ -51,15 +51,11 @@ public class CurrencyRatioEventScheduler {
         applicationEventPublisher.publishEvent(customSpringEvent);
     }
 
-//    @Scheduled(fixedRate = 999999)
     // At minute 0 past every 21st hour from 9 through 23.
     // Or in simpler terms runs at 9AM and again at 11PM, twice a day
-//    @Transactional(rollbackFor = { RuntimeException.class, Error.class, CurrencyRatioException.class })
-//    @Scheduled(cron = "0 0 9/21 * * *")
-    public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItems_Every12Hours() throws CurrencyRatioException {
-
-        Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
-
+    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CurrencyRatioException.class})
+    @Scheduled(cron = "0 0 9/21 * * *")
+    public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItemEntriesEvery12Hours() throws CurrencyRatioException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
         Calendar cal = Calendar.getInstance();
@@ -70,140 +66,102 @@ public class CurrencyRatioEventScheduler {
 
         ItemDefinitionEntity chaosOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
 
-        Set<CurrencyRatioEntity> currencyRatioEntityList = new HashSet<>(5);
-
-        // TODO This approach is a very naive way of calculating the prices, must think of something better
-        // sextant average price calc
-        ItemDefinitionEntity sextantEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
-
-
         // divine average price calc
         ItemDefinitionEntity divineOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.DIVINE_ORB.getName());
-        int divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity, sextantEntity);
-//
-//        CurrencyRatioEntity divineCurrencyRatio = new CurrencyRatioEntity();
-//        divineCurrencyRatio.setItemDefinitionEntity(divineOrbEntity);
-//        divineCurrencyRatio.setChaos(divineAveragePrice);
-//        currencyRatioEntityList.add(divineCurrencyRatio);
-//        currencyRatioMap.put(ItemDefinitionEnum.DIVINE_ORB, divineCurrencyRatio);
-//
-//
-//        int sextantAveragePrice = calculateAveragePriceForSextant(now, nowMinus12Hours, chaosOrbEntity, sextantEntity);
-//
-//        CurrencyRatioEntity sextantCurrencyRatio = new CurrencyRatioEntity();
-//        sextantCurrencyRatio.setItemDefinitionEntity(sextantEntity);
-//        sextantCurrencyRatio.setChaos(sextantAveragePrice);
-//        currencyRatioEntityList.add(sextantCurrencyRatio);
-//        currencyRatioMap.put(ItemDefinitionEnum.AWAKENED_SEXTANT, sextantCurrencyRatio);
-//
-//        // add one for chaos as well, even though it's not calculated
-//        ItemDefinitionEntity chaosEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
-//        CurrencyRatioEntity chaosCurrencyRatio = new CurrencyRatioEntity();
-//        chaosCurrencyRatio.setItemDefinitionEntity(chaosEntity);
-//        chaosCurrencyRatio.setChaos(1);
-//        currencyRatioEntityList.add(chaosCurrencyRatio);
-//        currencyRatioMap.put(ItemDefinitionEnum.CHAOS_ORB, chaosCurrencyRatio);
-//
-//        // save after getting all so that an exception can trigger if anything goes wrong
-//        currencyRatioRepository.saveAll(currencyRatioEntityList);
+        BigDecimal divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity);
+        saveDivineAveragePrice(divineOrbEntity, divineAveragePrice);
 
+        ItemDefinitionEntity sextantEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
+        BigDecimal sextantAveragePrice = calculateAveragePriceForSextant(now, nowMinus12Hours, chaosOrbEntity, sextantEntity);
+        saveSextantAveragePrice(sextantEntity, sextantAveragePrice);
+
+        // add one for chaos as well, even though it's not calculated
+        ItemDefinitionEntity chaosEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
+        saveChaosAveragePrice(chaosEntity);
+
+        // save after getting all so that an exception can trigger if anything goes wrong
+        currencyRatioRepository.saveAll(currencyRatioMap.values());
         publishCurrencyRatioRecalculatedEvent(currencyRatioMap);
     }
 
-    private int calculateAveragePriceForSextant(Timestamp now, Timestamp nowMinus12Hours, ItemDefinitionEntity chaosOrbEntity, ItemDefinitionEntity sextantEntity) throws CurrencyRatioException {
-        int offset = 10;
-
-        Optional<Integer> averageSextantPrice = itemEntityRepository.getAveragePriceForItem(
+    private BigDecimal calculateAveragePriceForSextant(
+            Timestamp now,
+            Timestamp nowMinus12Hours,
+            ItemDefinitionEntity chaosOrbEntity,
+            ItemDefinitionEntity sextantEntity
+    ) throws CurrencyRatioException {
+        Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDatesWithLimitAndOffset(
                 sextantEntity.getId(),
                 chaosOrbEntity.getId(),
-                9999,
+                200,
                 nowMinus12Hours,
                 now,
-                IMPOSED_LIMIT,
-                offset
+                10,
+                IMPOSED_LIMIT
         );
 
-        if(averageSextantPrice.isPresent()) {
-            return averageSextantPrice.get();
-        }
-
-        throw new CurrencyRatioException("Unable to calculate price for awakened sextant");
+        BigDecimal lowerLimit = BigDecimal.valueOf(1);
+        BigDecimal upperLimit = BigDecimal.valueOf(30);
+        return getPriceAsBigDecimalAverage(pricesInBetweenDates, lowerLimit, upperLimit);
     }
 
-    private int calculateAveragePriceForDivine(Timestamp now,
-                                               Timestamp nowMinus12Hours,
-                                               ItemDefinitionEntity chaosOrbEntity,
-                                               ItemDefinitionEntity divineOrbEntity,
-                                               ItemDefinitionEntity sextantEntity
+    private BigDecimal calculateAveragePriceForDivine(Timestamp now,
+                                                      Timestamp nowMinus12Hours,
+                                                      ItemDefinitionEntity chaosOrbEntity,
+                                                      ItemDefinitionEntity divineOrbEntity
     ) throws CurrencyRatioException {
-
-        Collection<CurrencyRatioEntity> currencyRatioEntities = currencyRatioRepository.getAllByItemDefinitionEntityInAndCreatedAtIsBetween(new HashSet<>(List.of(
-                chaosOrbEntity,
-                divineOrbEntity,
-                sextantEntity
-        )), nowMinus12Hours, now);
-
-        CurrencyRatioEntity divineOrbRatio = null;
-
-        for(CurrencyRatioEntity currencyRatio: currencyRatioEntities) {
-            if(currencyRatio.getItemDefinitionEntity().getName().equals(divineOrbEntity.getName())) {
-                divineOrbRatio = currencyRatio;
-                break;
-            }
-        }
-
-        if(null != divineOrbRatio) {
-            Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDates(
-                    divineOrbEntity.getId(),
-                    chaosOrbEntity.getId(),
-                    9999,
-                    nowMinus12Hours,
-                    now
-            );
-
-            // exclude prices that have a deviation of more than 20% from the previous day price
-            // this will hopefully act as a barrier for price fixing and such
-            BigDecimal multiplicand = new BigDecimal("0.2").setScale(4, RoundingMode.UNNECESSARY);
-
-            BigDecimal skewingUp = divineOrbRatio.getChaos().multiply(multiplicand).add(divineOrbRatio.getChaos());
-            BigDecimal skewingDown = divineOrbRatio.getChaos().subtract(divineOrbRatio.getChaos().multiply(multiplicand));
-            Iterator<ItemEntity> iter = pricesInBetweenDates.iterator();
-
-            while(iter.hasNext()) {
-                BigDecimal next = iter.next().getPrice();
-                if(next.compareTo(skewingDown) < 0 || next.compareTo(skewingUp) > 0) {
-                    iter.remove();
-                }
-            }
-
-//            pricesInBetweenDates.removeIf(next -> next.getPrice().compareTo(skewingDown) < 0 || next.getPrice().compareTo(skewingUp) > 0);
-
-            BigDecimal bigDecimal = new BigDecimal(String.valueOf(BigDecimal.ZERO));
-            for(ItemEntity item :pricesInBetweenDates) {
-                bigDecimal = bigDecimal.add(item.getPrice());
-            }
-
-            bigDecimal = bigDecimal.divide(new BigDecimal(pricesInBetweenDates.size()).setScale(4, RoundingMode.UNNECESSARY), RoundingMode.HALF_EVEN);
-            boolean test = true;
-        }
-
-        int offset = 10;
-
-        // and this is, in theory, the average divine price for the past 12 hours
-        Optional<Integer> averageDivinePrice = itemEntityRepository.getAveragePriceForItem(
+        Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDatesWithLimitAndOffset(
                 divineOrbEntity.getId(),
                 chaosOrbEntity.getId(),
-                9999,
+                200,
                 nowMinus12Hours,
                 now,
-                IMPOSED_LIMIT,
-                offset
+                10,
+                IMPOSED_LIMIT
         );
 
-        if(averageDivinePrice.isPresent()) {
-            return averageDivinePrice.get();
-        }
+        BigDecimal lowerLimit = BigDecimal.valueOf(5);
+        BigDecimal upperLimit = BigDecimal.valueOf(300);
+        return getPriceAsBigDecimalAverage(pricesInBetweenDates, lowerLimit, upperLimit);
+    }
 
-        throw new CurrencyRatioException("Unable to calculate price for divine");
+    private BigDecimal getPriceAsBigDecimalAverage(
+            Collection<ItemEntity> pricesInBetweenDates,
+            BigDecimal lowerLimit, BigDecimal upperLimit
+    ) throws CurrencyRatioException {
+        pricesInBetweenDates.removeIf(next -> next.getPrice().compareTo(lowerLimit) < 0 || next.getPrice().compareTo(upperLimit) > 0);
+        OptionalDouble averagePrice = pricesInBetweenDates.stream().mapToDouble(item -> item.getPrice().doubleValue()).average();
+
+        if (averagePrice.isPresent()) {
+            return BigDecimal.valueOf(averagePrice.getAsDouble());
+        }
+        throw new CurrencyRatioException("Unable to calculate price");
+    }
+
+    private void saveDivineAveragePrice(
+            ItemDefinitionEntity divineOrbEntity,
+            BigDecimal divineAveragePrice
+    ) {
+        CurrencyRatioEntity divineCurrencyRatio = new CurrencyRatioEntity();
+        divineCurrencyRatio.setItemDefinitionEntity(divineOrbEntity);
+        divineCurrencyRatio.setChaos(divineAveragePrice);
+        currencyRatioMap.put(ItemDefinitionEnum.DIVINE_ORB, divineCurrencyRatio);
+    }
+
+    private void saveSextantAveragePrice(
+            ItemDefinitionEntity sextantEntity,
+            BigDecimal sextantAveragePrice
+    ) {
+        CurrencyRatioEntity sextantCurrencyRatio = new CurrencyRatioEntity();
+        sextantCurrencyRatio.setItemDefinitionEntity(sextantEntity);
+        sextantCurrencyRatio.setChaos(sextantAveragePrice);
+        currencyRatioMap.put(ItemDefinitionEnum.AWAKENED_SEXTANT, sextantCurrencyRatio);
+    }
+
+    private void saveChaosAveragePrice(ItemDefinitionEntity chaosEntity) {
+        CurrencyRatioEntity chaosCurrencyRatio = new CurrencyRatioEntity();
+        chaosCurrencyRatio.setItemDefinitionEntity(chaosEntity);
+        chaosCurrencyRatio.setChaos(BigDecimal.valueOf(1));
+        currencyRatioMap.put(ItemDefinitionEnum.CHAOS_ORB, chaosCurrencyRatio);
     }
 }

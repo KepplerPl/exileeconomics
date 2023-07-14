@@ -1,8 +1,8 @@
 package com.example.exileeconomics.mapper.deserializer;
 
 import com.example.exileeconomics.definitions.ItemDefinitionEnum;
-import com.example.exileeconomics.mapper.ItemDao;
-import com.example.exileeconomics.mapper.PublicStashTabsDao;
+import com.example.exileeconomics.mapper.ItemDTO;
+import com.example.exileeconomics.mapper.PublicStashTabsDTO;
 import com.example.exileeconomics.price.SellableItemBuilder;
 import com.example.exileeconomics.price.SellableItemDTO;
 import com.google.gson.JsonElement;
@@ -11,7 +11,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashTabsDao> {
+public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashTabsDTO> {
     private final String activeLeague;
     private final SellableItemBuilder sellableItemBuilder;
 
@@ -21,12 +21,12 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
     }
 
     @Override
-    public PublicStashTabsDao fromJson(JsonObject jsonObject) {
-        PublicStashTabsDao publicStashTabsDao = new PublicStashTabsDao();
+    public PublicStashTabsDTO fromJson(JsonObject jsonObject) {
+        PublicStashTabsDTO publicStashTabsDTO = new PublicStashTabsDTO();
         List<JsonElement> stashes = jsonObject.get("stashes").getAsJsonArray().asList();
 
-        List<List<ItemDao>> items = new ArrayList<>();
-        List<ItemDao> itemDaoList = new ArrayList<>();
+        List<List<ItemDTO>> items = new ArrayList<>();
+        List<ItemDTO> itemDTOList = new ArrayList<>();
 
         for (JsonElement stashObject : stashes) {
             if (stashObject.isJsonObject()) {
@@ -40,19 +40,19 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
         }
 
         if(!items.isEmpty()) {
-            for(List<ItemDao> itemDaoLoopList : items) {
-                if(!itemDaoLoopList.isEmpty()) {
-                    itemDaoList.addAll(itemDaoLoopList);
+            for(List<ItemDTO> itemDTOLoopList : items) {
+                if(!itemDTOLoopList.isEmpty()) {
+                    itemDTOList.addAll(itemDTOLoopList);
                 }
             }
         }
-        publicStashTabsDao.setItemDaos(itemDaoList);
+        publicStashTabsDTO.setItemDTOS(itemDTOList);
 
-        return publicStashTabsDao;
+        return publicStashTabsDTO;
     }
 
-    private List<ItemDao> itemFromJson(JsonObject stash) {
-        List<ItemDao> items = new ArrayList<>();
+    private List<ItemDTO> itemFromJson(JsonObject stash) {
+        List<ItemDTO> items = new ArrayList<>();
 
         if (!stash.has("items") || stash.get("items").isJsonNull()) {
             return items;
@@ -83,7 +83,7 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
 
             ItemDefinitionEnum itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("baseType").getAsString());
 
-            ItemDao item = new ItemDao();
+            ItemDTO item = new ItemDTO();
             item.setPrice(sellableItemDTO.getPrice());
             item.setSoldQuantity(sellableItemDTO.getSoldQuantity());
             item.setTotalQuantity(itemJson.get("stackSize").getAsInt());

@@ -60,11 +60,11 @@ public final class PublicStashTabsOrchestrator {
     @EventListener
     @Order(value = 2)
     public void onApplicationEvent(ApplicationReadyEvent event){
-        initCurrencyRatio();
-
-        startCurrencyRatioUpdater();
-        startPublicStashProducer();
-        startPublicStashConsumer();
+//        initCurrencyRatio();
+//
+//        startCurrencyRatioUpdater();
+//        startPublicStashProducer();
+//        startPublicStashConsumer();
     }
 
     private void initCurrencyRatio() {
