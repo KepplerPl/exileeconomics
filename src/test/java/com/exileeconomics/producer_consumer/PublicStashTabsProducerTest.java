@@ -34,8 +34,7 @@ public class PublicStashTabsProducerTest {
         NextIdEntity nextIdEntity = new NextIdEntity();
         nextIdEntity.setNextId("2000655901-1996622915-1930774387-2140863898-2077103178");
         nextIdEntity.setId(1L);
-        Collection<NextIdEntity> nextIdEntityCollection = new ArrayList<>(List.of(nextIdEntity));
-        Mockito.when(nextIdRepository.mostCurrentNextId()).thenReturn(nextIdEntityCollection);
+        Mockito.when(nextIdRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(nextIdEntity);
 
         HttpURLConnection connection = Mockito.mock(HttpURLConnection.class);
 

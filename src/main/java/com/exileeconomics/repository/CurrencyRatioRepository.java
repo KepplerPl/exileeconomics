@@ -19,12 +19,4 @@ public interface CurrencyRatioRepository extends CrudRepository<CurrencyRatioEnt
             nativeQuery = true
     )
     Collection<CurrencyRatioEntity> mostCurrentCurrencyRatio(@Param("list") List<Long> list, @Param("limit") Integer limit);
-
-//    @Query(
-//            value = "FROM CurrencyRatioEntity cre WHERE cre.itemDefinitionEntity in (:list) ORDER BY createdAt DESC LIMIT :limit"
-//    )
-//    Collection<CurrencyRatioEntity> mostCurrentCurrencyRatio(@Param("list") List<Long> list, @Param("limit") Integer limit);
-
-    Collection<CurrencyRatioEntity> getAllByItemDefinitionEntityInAndCreatedAtIsBetween(Set<ItemDefinitionEntity> itemDefinitionEntities, Timestamp start, Timestamp end);
-
 }

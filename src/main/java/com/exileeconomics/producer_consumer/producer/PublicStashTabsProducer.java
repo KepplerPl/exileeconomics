@@ -130,19 +130,16 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     }
 
     private void setCurrentNextId() throws InterruptedException {
-        Collection<NextIdEntity> nextIdEntities = nextIdRepository.mostCurrentNextId();
-        if (nextIdEntities.stream().findFirst().isPresent()) {
-            NextIdEntity nextIdEntity = nextIdEntities.stream().findFirst().get();
-            nextIdQueue.put(nextIdEntity.getNextId());
+        NextIdEntity nextIdEntity = nextIdRepository.findFirstByOrderByCreatedAtDesc();
+        nextIdQueue.put(nextIdEntity.getNextId());
 
-            try {
-                HttpURLConnection request = requestHandler.getPublicStashTabs(nextIdEntity.getNextId());
-                Map<String, List<String>> headers = request.getHeaderFields();
-                apiHeaderBag.setHeaders(headers);
-            } catch (IOException e) {
-                System.out.println("function setInitialHeaders tried to poll nextId but gave up after waiting 10 seconds");
-                throw new RuntimeException(e);
-            }
+        try {
+            HttpURLConnection request = requestHandler.getPublicStashTabs(nextIdEntity.getNextId());
+            Map<String, List<String>> headers = request.getHeaderFields();
+            apiHeaderBag.setHeaders(headers);
+        } catch (IOException e) {
+            System.out.println("function setInitialHeaders tried to poll nextId but gave up after waiting 10 seconds");
+            throw new RuntimeException(e);
         }
     }
 }
