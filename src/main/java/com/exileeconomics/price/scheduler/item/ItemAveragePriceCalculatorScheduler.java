@@ -45,7 +45,7 @@ public class ItemAveragePriceCalculatorScheduler {
         this.priceRules = priceRules;
     }
 
-//    @Scheduled(cron = "0 0 9/21 * * *")
+    @Scheduled(cron = "0 2 9/21 * * *")
     @Scheduled(fixedRate = 99999999)
     public void scheduledItemPriceCalculationInsertBasedOnAveragePriceOfItemEntriesEvery12Hours() throws AveragePriceCalculationException, RuleNotFoundException {
         long start = System.currentTimeMillis();
@@ -55,7 +55,7 @@ public class ItemAveragePriceCalculatorScheduler {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now.getTime());
 
-        cal.add(Calendar.HOUR, -72);
+        cal.add(Calendar.HOUR, -12);
         Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
 
         Collection<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsRepository.findAllByNameIn(
@@ -75,8 +75,8 @@ public class ItemAveragePriceCalculatorScheduler {
         );
 
         Set<ItemDefinitionEntity> currencyToCalculateFor = new HashSet<>() {{
-            add(chaosOrbItemDefinitionEntity); // 568
-            add(divineOrbItemDefinitionEntity); // 219
+            add(chaosOrbItemDefinitionEntity);
+            add(divineOrbItemDefinitionEntity);
             add(sextantItemDefinitionEntity);
         }};
 
@@ -106,7 +106,6 @@ public class ItemAveragePriceCalculatorScheduler {
                     } catch (AveragePriceCalculationException e) {
                         continue; // intended
                     }
-
 
                     ItemAveragePriceEntity itemAveragePriceEntity = new ItemAveragePriceEntity();
                     itemAveragePriceEntity.setCurrencyRatio(
