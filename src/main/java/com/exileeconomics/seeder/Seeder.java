@@ -4,9 +4,9 @@ import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.entity.CurrencyRatioEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.entity.NextIdEntity;
-import com.exileeconomics.repository.CurrencyRatioRepository;
-import com.exileeconomics.repository.ItemDefinitionsRepository;
-import com.exileeconomics.repository.NextIdRepository;
+import com.exileeconomics.service.CurrencyRatioService;
+import com.exileeconomics.service.ItemDefinitionsService;
+import com.exileeconomics.service.NextIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -22,19 +22,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class Seeder {
-
-    private final ItemDefinitionsRepository itemDefinitionsRepository;
-    private final NextIdRepository nextIdRepository;
-    private final CurrencyRatioRepository currencyRatioRepository;
+    private final ItemDefinitionsService itemDefinitionsService;
+    private final NextIdService nextIdService;
+    private final CurrencyRatioService currencyRatioService;
 
     public Seeder(
-            @Autowired ItemDefinitionsRepository itemDefinitionsRepository,
-            @Autowired CurrencyRatioRepository currencyRatioRepository,
-            @Autowired NextIdRepository nextIdRepository
+            @Autowired ItemDefinitionsService itemDefinitionsService,
+            @Autowired CurrencyRatioService currencyRatioService,
+            @Autowired NextIdService nextIdService
     ) {
-        this.itemDefinitionsRepository = itemDefinitionsRepository;
-        this.nextIdRepository = nextIdRepository;
-        this.currencyRatioRepository = currencyRatioRepository;
+        this.itemDefinitionsService = itemDefinitionsService;
+        this.nextIdService = nextIdService;
+        this.currencyRatioService = currencyRatioService;
     }
 
     @EventListener
@@ -48,31 +47,31 @@ public class Seeder {
 
     private void seedCurrencyRatio() {
 
-        if(!currencyRatioRepository.findAll().iterator().hasNext()) {
-            ItemDefinitionEntity divineOrb = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.DIVINE_ORB.getName());
+        if(!currencyRatioService.findAll().iterator().hasNext()) {
+            ItemDefinitionEntity divineOrb = itemDefinitionsService.getItemDefinitionEntityByItemDefinitionEnum(ItemDefinitionEnum.DIVINE_ORB);
             CurrencyRatioEntity divineOrbToChaosRatio = new CurrencyRatioEntity();
             divineOrbToChaosRatio.setChaos(new BigDecimal(186));
             divineOrbToChaosRatio.setItemDefinitionEntity(divineOrb);
-            currencyRatioRepository.save(divineOrbToChaosRatio);
+            currencyRatioService.save(divineOrbToChaosRatio);
 
-            ItemDefinitionEntity awakenedSextant = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
+            ItemDefinitionEntity awakenedSextant = itemDefinitionsService.getItemDefinitionEntityByItemDefinitionEnum(ItemDefinitionEnum.AWAKENED_SEXTANT);
             CurrencyRatioEntity sextantToChaosRatio = new CurrencyRatioEntity();
             sextantToChaosRatio.setChaos(new BigDecimal(5));
             sextantToChaosRatio.setItemDefinitionEntity(awakenedSextant);
-            currencyRatioRepository.save(sextantToChaosRatio);
+            currencyRatioService.save(sextantToChaosRatio);
 
-            ItemDefinitionEntity chaos = itemDefinitionsRepository.getItemDefinitionByName(ItemDefinitionEnum.CHAOS_ORB.getName());
+            ItemDefinitionEntity chaos = itemDefinitionsService.getItemDefinitionEntityByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);
             CurrencyRatioEntity chaosToChaosRatio = new CurrencyRatioEntity();
             chaosToChaosRatio.setChaos(new BigDecimal(1));
             chaosToChaosRatio.setItemDefinitionEntity(chaos);
-            currencyRatioRepository.save(chaosToChaosRatio);
+            currencyRatioService.save(chaosToChaosRatio);
         }
     }
 
     private void seedItemDefinitions() {
-        if(!itemDefinitionsRepository.findAll().iterator().hasNext()) {
+        if(!itemDefinitionsService.findAll().iterator().hasNext()) {
             Set<String> existingItemsAsSet = new HashSet<>();
-            Iterable<ItemDefinitionEntity> existingIndexableItems = itemDefinitionsRepository.findAll();
+            Iterable<ItemDefinitionEntity> existingIndexableItems = itemDefinitionsService.findAll();
             existingIndexableItems.forEach(item -> existingItemsAsSet.add(item.getName()));
 
             ItemDefinitionEnum[] items = ItemDefinitionEnum.values();
@@ -87,16 +86,16 @@ public class Seeder {
             for(String item:itemDefinitions) {
                 ItemDefinitionEntity indexableItem = new ItemDefinitionEntity();
                 indexableItem.setName(item);
-                itemDefinitionsRepository.save(indexableItem);
+                itemDefinitionsService.save(indexableItem);
             }
         }
     }
 
     private void seedNextId() {
-        if(!nextIdRepository.findAll().iterator().hasNext()) {
+        if(!nextIdService.findAll().iterator().hasNext()) {
             NextIdEntity nextIdEntity = new NextIdEntity();
             nextIdEntity.setNextId("2000728804-1996698714-1930863570-2140969949-2077177458");
-            nextIdRepository.save(nextIdEntity);
+            nextIdService.save(nextIdEntity);
         }
     }
 }

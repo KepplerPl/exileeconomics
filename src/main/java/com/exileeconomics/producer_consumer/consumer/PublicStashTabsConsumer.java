@@ -7,7 +7,7 @@ import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.mapper.ItemDTO;
 import com.exileeconomics.mapper.PublicStashTabsDTO;
 import com.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
-import com.exileeconomics.repository.ItemEntityRepository;
+import com.exileeconomics.service.ItemEntityService;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
@@ -19,20 +19,20 @@ import java.util.concurrent.CountDownLatch;
 public class PublicStashTabsConsumer implements NoSuppressedRunnable {
     private final BlockingQueue<String> jsonResponsesQueue;
     private final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions;
-    private final ItemEntityRepository itemEntityRepository;
+    private final ItemEntityService itemEntityService;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
     private final PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson;
 
     public PublicStashTabsConsumer(
             BlockingQueue<String> jsonResponsesQueue,
             HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions,
-            ItemEntityRepository itemEntityRepository,
+            ItemEntityService itemEntityService,
             CountDownLatch countDownLatchForCurrencyRatioInitialization,
             PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson
     ) {
         this.jsonResponsesQueue = jsonResponsesQueue;
         this.itemDefinitions = itemDefinitions;
-        this.itemEntityRepository = itemEntityRepository;
+        this.itemEntityService = itemEntityService;
         this.countDownLatchForCurrencyRatioInitialization = countDownLatchForCurrencyRatioInitialization;
         this.publicStashTabsDeserializerFromJson = publicStashTabsDeserializerFromJson;
     }
@@ -79,7 +79,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
 
             System.out.printf("Saving a total of %s items to database%n", itemEntityList.size());
 
-            itemEntityRepository.saveAll(itemEntityList);
+            itemEntityService.saveAll(itemEntityList);
         }
     }
 }

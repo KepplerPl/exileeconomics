@@ -1,6 +1,7 @@
 package com.exileeconomics.http;
 
-import com.exileeconomics.Properties;
+import com.exileeconomics.AppProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -10,20 +11,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 @Service
-public final class RequestHandler {
-    private final Properties properties;
+public class RequestHandler {
+    private final AppProperties appProperties;
 
-    public RequestHandler(Properties properties) {
-        this.properties = properties;
+    public RequestHandler(@Autowired AppProperties appProperties) {
+        this.appProperties = appProperties;
     }
 
     public HttpURLConnection getPublicStashTabs(String id) throws IOException {
-        URL url = new URL(properties.getSchema() + "://" + properties.getHost() + "/" + properties.getPsapi() + "?id=" + id);
+        URL url = new URL(appProperties.getSchema() + "://" + appProperties.getHost() + "/" + appProperties.getPsapi() + "?id=" + id);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
 
-        con.setRequestProperty("User-Agent", properties.getUserAgent());
-        con.setRequestProperty("Authorization", "Bearer " + properties.getBearerToken());
+        con.setRequestProperty("User-Agent", appProperties.getUserAgent());
+        con.setRequestProperty("Authorization", "Bearer " + appProperties.getBearerToken());
 
         return con;
     }

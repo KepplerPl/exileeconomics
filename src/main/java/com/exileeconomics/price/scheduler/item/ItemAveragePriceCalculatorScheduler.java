@@ -10,9 +10,9 @@ import com.exileeconomics.price.rules.ItemPriceRule;
 import com.exileeconomics.price.rules.PriceRules;
 import com.exileeconomics.price.rules.exceptions.RuleNotFoundException;
 import com.exileeconomics.price.rules.quantity.QuantityLimitInterface;
-import com.exileeconomics.repository.CurrencyRatioRepository;
-import com.exileeconomics.repository.ItemAveragePriceEntityRepository;
-import com.exileeconomics.repository.ItemDefinitionsRepository;
+import com.exileeconomics.service.CurrencyRatioService;
+import com.exileeconomics.service.ItemAveragePriceEntityService;
+import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,33 +20,32 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class ItemAveragePriceCalculatorScheduler {
     private final AverageItemPriceCalculator averageItemPriceCalculator;
-    private final CurrencyRatioRepository currencyRatioRepository;
-    private final ItemAveragePriceEntityRepository itemAveragePriceEntityRepository;
-    private final ItemDefinitionsRepository itemDefinitionsRepository;
+    private final CurrencyRatioService currencyRatioService;
+    private final ItemAveragePriceEntityService itemAveragePriceEntityService;
+    private final ItemDefinitionsService itemDefinitionsService;
     private final PriceRules priceRules;
 
     public ItemAveragePriceCalculatorScheduler(
             @Autowired AverageItemPriceCalculator averageItemPriceCalculator,
-            @Autowired ItemAveragePriceEntityRepository itemAveragePriceEntityRepository,
-            @Autowired CurrencyRatioRepository currencyRatioRepository,
-            @Autowired ItemDefinitionsRepository itemDefinitionsRepository,
+            @Autowired ItemAveragePriceEntityService itemAveragePriceEntityService,
+            @Autowired CurrencyRatioService currencyRatioService,
+            @Autowired ItemDefinitionsService itemDefinitionsService,
             @Autowired PriceRules priceRules
 
     ) {
         this.averageItemPriceCalculator = averageItemPriceCalculator;
-        this.itemAveragePriceEntityRepository = itemAveragePriceEntityRepository;
-        this.currencyRatioRepository = currencyRatioRepository;
-        this.itemDefinitionsRepository = itemDefinitionsRepository;
+        this.itemAveragePriceEntityService = itemAveragePriceEntityService;
+        this.currencyRatioService = currencyRatioService;
+        this.itemDefinitionsService = itemDefinitionsService;
         this.priceRules = priceRules;
     }
 
-    @Scheduled(cron = "0 2 9/21 * * *")
-    @Scheduled(fixedRate = 99999999)
+//    @Scheduled(cron = "0 2 9/21 * * *")
+//    @Scheduled(fixedRate = 99999999)
     public void scheduledItemPriceCalculationInsertBasedOnAveragePriceOfItemEntriesEvery12Hours() throws AveragePriceCalculationException, RuleNotFoundException {
         long start = System.currentTimeMillis();
 
@@ -58,31 +57,25 @@ public class ItemAveragePriceCalculatorScheduler {
         cal.add(Calendar.HOUR, -12);
         Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
 
-        Collection<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsRepository.findAllByNameIn(
-                Arrays.stream(ItemDefinitionEnum.values()).map(ItemDefinitionEnum::getName).collect(Collectors.toSet())
-        );
+        Set<ItemDefinitionEnum> itemDefinitionEnums = new HashSet<>(Arrays.asList(ItemDefinitionEnum.values()));
+        Collection<ItemDefinitionEntity> itemDefinitionEntities =
+                itemDefinitionsService.findAllItemDefinitionEntitiesByItemDefinitionEnums(itemDefinitionEnums);
 
         ItemDefinitionEntity chaosOrbItemDefinitionEntity = itemDefinitionEntities.stream().filter(item -> item.getName().equals(ItemDefinitionEnum.CHAOS_ORB.getName())).findFirst().orElseThrow(AveragePriceCalculationException::new);
         ItemDefinitionEntity divineOrbItemDefinitionEntity = itemDefinitionEntities.stream().filter(item -> item.getName().equals(ItemDefinitionEnum.DIVINE_ORB.getName())).findFirst().orElseThrow(AveragePriceCalculationException::new);
         ItemDefinitionEntity sextantItemDefinitionEntity = itemDefinitionEntities.stream().filter(item -> item.getName().equals(ItemDefinitionEnum.AWAKENED_SEXTANT.getName())).findFirst().orElseThrow(AveragePriceCalculationException::new);
 
-        Collection<CurrencyRatioEntity> itemCurrencyRatios = currencyRatioRepository.mostCurrentCurrencyRatio(List.of(
+        Collection<CurrencyRatioEntity> itemCurrencyRatios = currencyRatioService.mostCurrentCurrencyRatio(List.of(
                         chaosOrbItemDefinitionEntity.getId(),
                         divineOrbItemDefinitionEntity.getId(),
                         sextantItemDefinitionEntity.getId()
-                ),
-                3
+                ), 3
         );
 
-        Set<ItemDefinitionEntity> currencyToCalculateFor = new HashSet<>() {{
-            add(chaosOrbItemDefinitionEntity);
-            add(divineOrbItemDefinitionEntity);
-            add(sextantItemDefinitionEntity);
-        }};
-
         System.out.println("Starting average price calculating...");
-        for (ItemDefinitionEntity soldForItemEntity : currencyToCalculateFor) {
-
+        // for each currency ratio in the database calculate the price
+        // of each sold itemDefinition sold in the currency ratio
+        for (CurrencyRatioEntity soldForItemEntity : itemCurrencyRatios) {
             List<ItemAveragePriceEntity> itemAveragePriceEntities = new ArrayList<>((int) (itemDefinitionEntities.size() + (itemDefinitionEntities.size() * 0.25)));
 
             for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionEntities) {
@@ -97,7 +90,7 @@ public class ItemAveragePriceCalculatorScheduler {
                                 nowMinus12Hours,
                                 now,
                                 soldItemEntity,
-                                soldForItemEntity,
+                                soldForItemEntity.getItemDefinitionEntity(),
                                 rule.getLimit(),
                                 rule.getOffset(),
                                 quantityLimits.getQuantityLowerLimit(),
@@ -111,7 +104,7 @@ public class ItemAveragePriceCalculatorScheduler {
                     itemAveragePriceEntity.setCurrencyRatio(
                             itemCurrencyRatios
                                     .stream()
-                                    .filter(n -> n.getItemDefinitionEntity().getName().equals(soldForItemEntity.getName()))
+                                    .filter(n -> n.getItemDefinitionEntity().getName().equals(soldForItemEntity.getItemDefinitionEntity().getName()))
                                     .findFirst()
                                     .orElseThrow(AveragePriceCalculationException::new)
                     );
@@ -123,7 +116,7 @@ public class ItemAveragePriceCalculatorScheduler {
                 }
             }
             if (!itemAveragePriceEntities.isEmpty()) {
-                itemAveragePriceEntityRepository.saveAll(itemAveragePriceEntities);
+                itemAveragePriceEntityService.saveAll(itemAveragePriceEntities);
                 itemAveragePriceEntities.clear();
             }
         }

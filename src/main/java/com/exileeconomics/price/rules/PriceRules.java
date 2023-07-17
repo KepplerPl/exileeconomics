@@ -30,7 +30,6 @@ public class PriceRules {
     private void generateRules() {
         for(ItemDefinitionEnum itemDefinitionEnum: ItemDefinitionEnum.values()) {
             ItemPriceRule itemPriceRule;
-            // for now just these 3 get special rules
             switch (itemDefinitionEnum) {
                 case WILD_CRYSTALLISED_LIFEFORCE, VIVID_CRYSTALLISED_LIFEFORCE, PRIMAL_CRYSTALLISED_LIFEFORCE -> {
                     QuantityLimit quantityLimit1 = new QuantityLimit(0, 15000);
@@ -44,8 +43,8 @@ public class PriceRules {
                     );
                 }
                 case WINGED_ABYSS_SCARAB, WINGED_BESTIARY_SCARAB, WINGED_BLIGHT_SCARAB, WINGED_BREACH_SCARAB, WINGED_CARTOGRAPHY_SCARAB, WINGED_DIVINATION_SCARAB,
-                        WINGED_ELDER_SCARAB, WINGED_EXPEDITION_SCARAB, WINGED_HARBINGER_SCARAB, WINGED_AMBUSH_SCARAB, WINGED_LEGION_SCARAB, WINGED_METAMORPH_SCARAB,
-                        WINGED_RELIQUARY_SCARAB, WINGED_SHAPER_SCARAB, WINGED_SULPHITE_SCARAB, WINGED_TORMENT_SCARAB
+                     WINGED_ELDER_SCARAB, WINGED_EXPEDITION_SCARAB, WINGED_HARBINGER_SCARAB, WINGED_AMBUSH_SCARAB, WINGED_LEGION_SCARAB, WINGED_METAMORPH_SCARAB,
+                     WINGED_RELIQUARY_SCARAB, WINGED_SHAPER_SCARAB, WINGED_SULPHITE_SCARAB, WINGED_TORMENT_SCARAB
                         -> {
                     QuantityLimit quantityLimit1 = new QuantityLimit(0, 20);
                     itemPriceRule = new ItemPriceRule(

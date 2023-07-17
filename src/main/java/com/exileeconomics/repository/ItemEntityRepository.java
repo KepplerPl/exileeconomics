@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Optional;
-
 
 @Repository
 public interface ItemEntityRepository extends CrudRepository<ItemEntity, Long> {
@@ -46,8 +44,8 @@ public interface ItemEntityRepository extends CrudRepository<ItemEntity, Long> {
     Collection<ItemEntity> getPricesForItemsBetweenDatesWithLimitAndOffsetAndQuantityBetween(
             @Param("sold_item_id") long soldItemId,
             @Param("sold_for_item_id") long soldForItemId,
-            @Param("quantity_lower_limit") int quantity_lower_limit,
-            @Param("quantity_upper_limit") int quantity_upper_limit,
+            @Param("quantity_lower_limit") int quantityLowerLimit,
+            @Param("quantity_upper_limit") int quantityUpperLimit,
             @Param("lower_time_limit") Timestamp lowerTimeLimit,
             @Param("upper_time_limit") Timestamp upperTimeLimit,
             @Param("limit") int limit,

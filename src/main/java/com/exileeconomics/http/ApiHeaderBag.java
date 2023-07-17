@@ -1,18 +1,24 @@
 package com.exileeconomics.http;
 
+import com.exileeconomics.http.exception.HeaderNotFoundException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ApiHeaderBag {
+public final class ApiHeaderBag {
     private Map<String, List<String>> headers = new HashMap<>();
 
     public void setHeaders(Map<String, List<String>> headers) {
         this.headers = headers;
     }
 
-    public String extractNextId() {
-        return headers.get("X-Next-Change-Id").get(0);
+    public String extractNextId() throws HeaderNotFoundException {
+        if(headers.containsKey("X-Next-Change-Id")) {
+            return headers.get("X-Next-Change-Id").get(0);
+        }
+
+        throw new HeaderNotFoundException("Unable to find header with name X-Next-Change-Id");
     }
 
     public String getHeaderValue(String value) {

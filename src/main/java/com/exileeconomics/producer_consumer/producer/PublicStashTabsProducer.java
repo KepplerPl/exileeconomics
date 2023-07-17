@@ -3,14 +3,14 @@ package com.exileeconomics.producer_consumer.producer;
 import com.exileeconomics.entity.NextIdEntity;
 import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
+import com.exileeconomics.http.exception.HeaderNotFoundException;
 import com.exileeconomics.producer_consumer.NoSuppressedRunnable;
 import com.exileeconomics.http.Throttler;
-import com.exileeconomics.repository.NextIdRepository;
+import com.exileeconomics.service.NextIdService;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -24,7 +24,7 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     private final Throttler throttler;
     private final RequestHandler requestHandler;
     private final ApiHeaderBag apiHeaderBag;
-    private final NextIdRepository nextIdRepository;
+    private final NextIdService nextIdService;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsProducer(
@@ -32,14 +32,14 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
             Throttler throttler,
             RequestHandler requestHandler,
             ApiHeaderBag apiHeaderBag,
-            NextIdRepository nextIdRepository,
+            NextIdService nextIdService,
             CountDownLatch countDownLatchForCurrencyRatioInitialization
     ) {
         this.jsonResponsesQueue = jsonResponsesQueue;
         this.throttler = throttler;
         this.requestHandler = requestHandler;
         this.apiHeaderBag = apiHeaderBag;
-        this.nextIdRepository = nextIdRepository;
+        this.nextIdService = nextIdService;
         this.countDownLatchForCurrencyRatioInitialization = countDownLatchForCurrencyRatioInitialization;
     }
 
@@ -70,7 +70,11 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
             response = requestHandler.getPublicStashTabs(nextId);
             headers = response.getHeaderFields();
             apiHeaderBag.setHeaders(headers);
-            nextIdFromRequest = apiHeaderBag.extractNextId();
+            try {
+                nextIdFromRequest = apiHeaderBag.extractNextId();
+            } catch (HeaderNotFoundException e) {
+                throw new RuntimeException(e);
+            }
 
             if(hasReachedEndOfStream(nextIdFromRequest, nextId)){
                 return;
@@ -126,11 +130,11 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     private void saveNextId(String nextId) {
         NextIdEntity nextIdEntityQ = new NextIdEntity();
         nextIdEntityQ.setNextId(nextId);
-        nextIdRepository.save(nextIdEntityQ);
+        nextIdService.save(nextIdEntityQ);
     }
 
     private void setCurrentNextId() throws InterruptedException {
-        NextIdEntity nextIdEntity = nextIdRepository.findFirstByOrderByCreatedAtDesc();
+        NextIdEntity nextIdEntity = nextIdService.findFirstByOrderByCreatedAtDesc();
         nextIdQueue.put(nextIdEntity.getNextId());
 
         try {

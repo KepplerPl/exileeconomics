@@ -5,7 +5,7 @@ import com.exileeconomics.entity.CurrencyRatioEntity;
 
 import java.math.BigDecimal;
 
-public class ItemDTO {
+public final class ItemDTO {
     private BigDecimal price;
     private CurrencyRatioEntity currencyRatio;
     private ItemDefinitionEnum item;

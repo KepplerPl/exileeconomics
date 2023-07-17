@@ -5,22 +5,21 @@ import com.exileeconomics.entity.CurrencyRatioEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.price.event.CurrencyRatioUpdateEvent;
 import com.exileeconomics.producer_consumer.NoSuppressedRunnable;
-import com.exileeconomics.repository.CurrencyRatioRepository;
-import com.exileeconomics.repository.ItemDefinitionsRepository;
+import com.exileeconomics.service.CurrencyRatioService;
+import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Component
 public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationListener<CurrencyRatioUpdateEvent> {
     private final Set<ItemDefinitionEnum> parsableCurrencies;
     private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
-    private final CurrencyRatioRepository currencyRatioRepository;
-    private final ItemDefinitionsRepository itemDefinitionsRepository;
+    private final CurrencyRatioService currencyRatioService;
+    private final ItemDefinitionsService itemDefinitionsService;
     private CountDownLatch countDownLatch;
 
     public CurrencyRatioEntity getRatioFor(ItemDefinitionEnum itemDefinitionEnum) {
@@ -29,10 +28,14 @@ public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationL
         }
     }
 
-    public CurrencyRatioProducer(Set<ItemDefinitionEnum> parsableCurrencies, CurrencyRatioRepository currencyRatioRepository, ItemDefinitionsRepository itemDefinitionsRepository) {
+    public CurrencyRatioProducer(
+            Set<ItemDefinitionEnum> parsableCurrencies,
+            CurrencyRatioService currencyRatioService,
+            ItemDefinitionsService itemDefinitionsService
+    ) {
         this.parsableCurrencies = parsableCurrencies;
-        this.currencyRatioRepository = currencyRatioRepository;
-        this.itemDefinitionsRepository = itemDefinitionsRepository;
+        this.currencyRatioService = currencyRatioService;
+        this.itemDefinitionsService = itemDefinitionsService;
     }
 
     public void setCountDownLatch(CountDownLatch countDownLatch) {
@@ -41,12 +44,7 @@ public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationL
 
     @Override
     public void doRun() {
-        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsRepository.findAllByNameIn(
-                parsableCurrencies
-                        .stream()
-                        .map(ItemDefinitionEnum::getName)
-                        .collect(Collectors.toSet())
-        );
+        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsService.findAllItemDefinitionEntitiesByItemDefinitionEnums(parsableCurrencies);
 
         int limit = parsableCurrencies.size();
         List<Long> longs = StreamSupport
@@ -54,7 +52,7 @@ public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationL
                 .map(ItemDefinitionEntity::getId)
                 .toList();
 
-        Collection<CurrencyRatioEntity> currencyRatioEntities = currencyRatioRepository.mostCurrentCurrencyRatio(longs, limit);
+        Collection<CurrencyRatioEntity> currencyRatioEntities = currencyRatioService.mostCurrentCurrencyRatio(longs, limit);
 
         for(CurrencyRatioEntity currencyRatio : currencyRatioEntities) {
             currencyRatioMap.put(ItemDefinitionEnum.fromString(currencyRatio.getItemDefinitionEntity().getName().toLowerCase()), currencyRatio);

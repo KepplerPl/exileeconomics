@@ -3,7 +3,7 @@ package com.exileeconomics.price.calculator;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.entity.ItemEntity;
 import com.exileeconomics.price.exception.AveragePriceCalculationException;
-import com.exileeconomics.repository.ItemEntityRepository;
+import com.exileeconomics.service.ItemEntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +14,12 @@ import java.util.OptionalDouble;
 
 @Service
 public class AverageItemPriceCalculator {
-    private final ItemEntityRepository itemEntityRepository;
+    private final ItemEntityService itemEntityService;
 
     public AverageItemPriceCalculator(
-            @Autowired ItemEntityRepository itemEntityRepository
+            @Autowired ItemEntityService itemEntityService
     ) {
-        this.itemEntityRepository = itemEntityRepository;
+        this.itemEntityService = itemEntityService;
     }
 
     public BigDecimal calculateAveragePriceFor(
@@ -32,7 +32,7 @@ public class AverageItemPriceCalculator {
             int quantityLowerLimit,
             int quantityUpperLimit
     ) throws AveragePriceCalculationException {
-        Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDatesWithLimitAndOffsetAndQuantityBetween(
+        Collection<ItemEntity> pricesInBetweenDates = itemEntityService.getPricesForItemsBetweenDatesWithLimitAndOffsetAndQuantityBetween(
                 soldItemEntity.getId(),
                 soldForItemEntity.getId(),
                 quantityLowerLimit,

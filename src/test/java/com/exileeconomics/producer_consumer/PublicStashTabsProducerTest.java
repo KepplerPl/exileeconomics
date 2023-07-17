@@ -5,7 +5,7 @@ import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
 import com.exileeconomics.http.Throttler;
 import com.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
-import com.exileeconomics.repository.NextIdRepository;
+import com.exileeconomics.service.NextIdService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -23,7 +23,7 @@ import java.util.concurrent.*;
 public class PublicStashTabsProducerTest {
 
     private final RequestHandler requestHandler = Mockito.mock(RequestHandler.class);
-    private final NextIdRepository nextIdRepository = Mockito.mock(NextIdRepository.class);
+    private final NextIdService nextIdService = Mockito.mock(NextIdService.class);
     private final CountDownLatch countDownLatch = new CountDownLatch(0);
     private final BlockingQueue<String> jsonResponses = new ArrayBlockingQueue<>(10);
     private final Throttler throttler = new Throttler();
@@ -34,7 +34,7 @@ public class PublicStashTabsProducerTest {
         NextIdEntity nextIdEntity = new NextIdEntity();
         nextIdEntity.setNextId("2000655901-1996622915-1930774387-2140863898-2077103178");
         nextIdEntity.setId(1L);
-        Mockito.when(nextIdRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(nextIdEntity);
+        Mockito.when(nextIdService.findFirstByOrderByCreatedAtDesc()).thenReturn(nextIdEntity);
 
         HttpURLConnection connection = Mockito.mock(HttpURLConnection.class);
 
@@ -46,7 +46,7 @@ public class PublicStashTabsProducerTest {
                 Files.readString(Paths.get("src/test/java/com/example/exileeconomics/producer_consumer/test.json"))
         );
 
-        Mockito.when(nextIdRepository.save(Mockito.any())).thenAnswer(i -> i.getArguments()[0]);
+        Mockito.when(nextIdService.save(Mockito.any())).thenAnswer(i -> i.getArguments()[0]);
 
         ExecutorService service = Executors.newSingleThreadExecutor();
 
@@ -55,7 +55,7 @@ public class PublicStashTabsProducerTest {
                 throttler,
                 requestHandler,
                 apiHeaderBag,
-                nextIdRepository,
+                nextIdService,
                 countDownLatch
         );
 

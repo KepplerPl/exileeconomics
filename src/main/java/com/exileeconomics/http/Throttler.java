@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * These class methods need to be synchronized if at any point I decide
  * to use it on more than one thread at once and not in a loop
  */
-public class Throttler {
+public final class Throttler {
     private final AtomicInteger currentHitCount = new AtomicInteger(2);
 
     public Throttler() {

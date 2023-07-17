@@ -4,7 +4,7 @@ import com.exileeconomics.entity.CurrencyRatioEntity;
 
 import java.math.BigDecimal;
 
-public class SellableItemDTO {
+public final class SellableItemDTO {
     private BigDecimal price;
     private CurrencyRatioEntity currencyRatio;
     private int soldQuantity;

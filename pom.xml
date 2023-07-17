@@ -14,9 +14,9 @@
     <name>exileeconomics</name>
     <description>exileeconomics</description>
     <packaging>war</packaging>
-    <properties>
+    <appProperties>
         <java.version>17</java.version>
-    </properties>
+    </appProperties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

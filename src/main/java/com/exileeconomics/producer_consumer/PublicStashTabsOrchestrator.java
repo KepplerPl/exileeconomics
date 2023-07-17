@@ -1,6 +1,6 @@
 package com.exileeconomics.producer_consumer;
 
-import com.exileeconomics.Properties;
+import com.exileeconomics.AppProperties;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.http.ApiHeaderBag;
@@ -9,19 +9,20 @@ import com.exileeconomics.http.Throttler;
 import com.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
 import com.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
 import com.exileeconomics.price.CurrencyRatioProducer;
+import com.exileeconomics.price.ParsableCurrency;
 import com.exileeconomics.price.SellableItemBuilder;
 import com.exileeconomics.producer_consumer.consumer.PublicStashTabsConsumer;
 import com.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
-import com.exileeconomics.repository.CurrencyRatioRepository;
-import com.exileeconomics.repository.ItemDefinitionsRepository;
-import com.exileeconomics.repository.ItemEntityRepository;
-import com.exileeconomics.repository.NextIdRepository;
+import com.exileeconomics.service.CurrencyRatioService;
+import com.exileeconomics.service.ItemDefinitionsService;
+import com.exileeconomics.service.NextIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import com.exileeconomics.service.ItemEntityService;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -29,31 +30,31 @@ import java.util.concurrent.*;
 @Service
 public final class PublicStashTabsOrchestrator {
     private final RequestHandler requestHandler;
-    private final Properties properties;
-    private final NextIdRepository nextIdRepository;
-    private final ItemDefinitionsRepository itemDefinitionsRepository;
-    private final ItemEntityRepository itemEntityRepository;
+    private final AppProperties appProperties;
+    private final NextIdService nextIdService;
+    private final ItemDefinitionsService itemDefinitionsService;
+    private final ItemEntityService itemEntityService;
     private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(50);
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-    private final CurrencyRatioRepository currencyRatioRepository;
+    private final CurrencyRatioService currencyRatioService;
     private CurrencyRatioProducer currencyRatioProducer;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsOrchestrator(
             @Autowired RequestHandler requestHandler,
-            @Autowired Properties properties,
-            @Autowired ItemDefinitionsRepository itemDefinitionsRepository,
-            @Autowired NextIdRepository nextIdRepository,
-            @Autowired ItemEntityRepository itemEntityRepository,
-            @Autowired CurrencyRatioRepository currencyRatioRepository,
+            @Autowired AppProperties appProperties,
+            @Autowired ItemDefinitionsService itemDefinitionsService,
+            @Autowired NextIdService nextIdService,
+            @Autowired ItemEntityService itemEntityService,
+            @Autowired CurrencyRatioService currencyRatioService,
             @Autowired RedisTemplate<String, String> redisTemplate
             ) {
         this.requestHandler = requestHandler;
-        this.properties = properties;
-        this.itemEntityRepository = itemEntityRepository;
-        this.itemDefinitionsRepository = itemDefinitionsRepository;
-        this.nextIdRepository = nextIdRepository;
-        this.currencyRatioRepository = currencyRatioRepository;
+        this.appProperties = appProperties;
+        this.itemEntityService = itemEntityService;
+        this.itemDefinitionsService = itemDefinitionsService;
+        this.nextIdService = nextIdService;
+        this.currencyRatioService = currencyRatioService;
         countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
     }
 
@@ -68,12 +69,7 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void initCurrencyRatio() {
-        Set<ItemDefinitionEnum> parsableCurrencies = new HashSet<>(List.of(
-                ItemDefinitionEnum.CHAOS_ORB,
-                ItemDefinitionEnum.DIVINE_ORB,
-                ItemDefinitionEnum.AWAKENED_SEXTANT)
-        );
-        currencyRatioProducer = new CurrencyRatioProducer(parsableCurrencies, currencyRatioRepository, itemDefinitionsRepository);
+        currencyRatioProducer = new CurrencyRatioProducer(ParsableCurrency.getParsableCurrencies(), currencyRatioService, itemDefinitionsService);
         currencyRatioProducer.setCountDownLatch(countDownLatchForCurrencyRatioInitialization);
     }
 
@@ -85,7 +81,7 @@ public final class PublicStashTabsOrchestrator {
     private void startPublicStashConsumer() {
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
                 new PublicStashTabsDeserializer(
-                        properties.getActiveLeague(),
+                        appProperties.getActiveLeague(),
                         new SellableItemBuilder(currencyRatioProducer)
                 )
         );
@@ -93,7 +89,7 @@ public final class PublicStashTabsOrchestrator {
         PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
                 jsonResponsesQueue,
                 getItemDefinitions(),
-                itemEntityRepository,
+                itemEntityService,
                 countDownLatchForCurrencyRatioInitialization,
                 publicStashTabsDeserializerFromJson
         );
@@ -106,14 +102,14 @@ public final class PublicStashTabsOrchestrator {
                 new Throttler(),
                 requestHandler,
                 new ApiHeaderBag(),
-                nextIdRepository,
+                nextIdService,
                 countDownLatchForCurrencyRatioInitialization
         );
         executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 200, TimeUnit.MILLISECONDS);
     }
 
     private HashMap<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
-        Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsRepository.findAll();
+        Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
         final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
 
         for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {

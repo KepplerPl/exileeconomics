@@ -6,9 +6,9 @@ import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.entity.ItemEntity;
 import com.exileeconomics.price.event.CurrencyRatioUpdateEvent;
 import com.exileeconomics.price.exception.CurrencyRatioException;
-import com.exileeconomics.repository.CurrencyRatioRepository;
-import com.exileeconomics.repository.ItemDefinitionsRepository;
-import com.exileeconomics.repository.ItemEntityRepository;
+import com.exileeconomics.service.CurrencyRatioService;
+import com.exileeconomics.service.ItemDefinitionsService;
+import com.exileeconomics.service.ItemEntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,9 +22,9 @@ import java.util.*;
 @Component
 public class CurrencyRatioEventScheduler {
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final CurrencyRatioRepository currencyRatioRepository;
-    private final ItemEntityRepository itemEntityRepository;
-    private final ItemDefinitionsRepository itemDefinitionsRepository;
+    private final CurrencyRatioService currencyRatioService;
+    private final ItemEntityService itemEntityService;
+    private final ItemDefinitionsService itemDefinitionsService;
     private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
     /**
@@ -36,14 +36,14 @@ public class CurrencyRatioEventScheduler {
 
     public CurrencyRatioEventScheduler(
             @Autowired ApplicationEventPublisher applicationEventPublisher,
-            @Autowired CurrencyRatioRepository currencyRatioRepository,
-            @Autowired ItemEntityRepository itemEntityRepository,
-            @Autowired ItemDefinitionsRepository itemDefinitionsRepository
+            @Autowired CurrencyRatioService currencyRatioService,
+            @Autowired ItemEntityService itemEntityService,
+            @Autowired ItemDefinitionsService itemDefinitionsService
     ) {
         this.applicationEventPublisher = applicationEventPublisher;
-        this.currencyRatioRepository = currencyRatioRepository;
-        this.itemEntityRepository = itemEntityRepository;
-        this.itemDefinitionsRepository = itemDefinitionsRepository;
+        this.currencyRatioService = currencyRatioService;
+        this.itemEntityService = itemEntityService;
+        this.itemDefinitionsService = itemDefinitionsService;
     }
 
     public void publishCurrencyRatioRecalculatedEvent(Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
@@ -64,23 +64,23 @@ public class CurrencyRatioEventScheduler {
         cal.add(Calendar.HOUR, -12);
         Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
 
-        ItemDefinitionEntity chaosOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
+        ItemDefinitionEntity chaosOrbEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);
 
         // divine average price calc
-        ItemDefinitionEntity divineOrbEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.DIVINE_ORB.getName());
+        ItemDefinitionEntity divineOrbEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.DIVINE_ORB);
         BigDecimal divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity);
         saveDivineAveragePrice(divineOrbEntity, divineAveragePrice);
 
-        ItemDefinitionEntity sextantEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.AWAKENED_SEXTANT.getName());
+        ItemDefinitionEntity sextantEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.AWAKENED_SEXTANT);
         BigDecimal sextantAveragePrice = calculateAveragePriceForSextant(now, nowMinus12Hours, chaosOrbEntity, sextantEntity);
         saveSextantAveragePrice(sextantEntity, sextantAveragePrice);
 
         // add one for chaos as well, even though it's not calculated
-        ItemDefinitionEntity chaosEntity = itemDefinitionsRepository.getFirstByName(ItemDefinitionEnum.CHAOS_ORB.getName());
+        ItemDefinitionEntity chaosEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);
         saveChaosAveragePrice(chaosEntity);
 
         // save after getting all so that an exception can trigger if anything goes wrong
-        currencyRatioRepository.saveAll(currencyRatioMap.values());
+        currencyRatioService.saveAll(currencyRatioMap.values());
         publishCurrencyRatioRecalculatedEvent(currencyRatioMap);
     }
 
@@ -90,7 +90,7 @@ public class CurrencyRatioEventScheduler {
             ItemDefinitionEntity chaosOrbEntity,
             ItemDefinitionEntity sextantEntity
     ) throws CurrencyRatioException {
-        Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDatesWithLimitAndOffset(
+        Collection<ItemEntity> pricesInBetweenDates = itemEntityService.getPricesForItemsBetweenDatesWithLimitAndOffset(
                 sextantEntity.getId(),
                 chaosOrbEntity.getId(),
                 200,
@@ -110,7 +110,7 @@ public class CurrencyRatioEventScheduler {
                                                       ItemDefinitionEntity chaosOrbEntity,
                                                       ItemDefinitionEntity divineOrbEntity
     ) throws CurrencyRatioException {
-        Collection<ItemEntity> pricesInBetweenDates = itemEntityRepository.getPricesForItemsBetweenDatesWithLimitAndOffset(
+        Collection<ItemEntity> pricesInBetweenDates = itemEntityService.getPricesForItemsBetweenDatesWithLimitAndOffset(
                 divineOrbEntity.getId(),
                 chaosOrbEntity.getId(),
                 200,

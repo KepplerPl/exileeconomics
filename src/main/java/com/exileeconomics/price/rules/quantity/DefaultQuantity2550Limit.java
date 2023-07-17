@@ -2,7 +2,7 @@ package com.exileeconomics.price.rules.quantity;
 
 import java.util.Objects;
 
-public  class DefaultQuantity2550Limit extends AbstractQuantityLimit{
+public final class DefaultQuantity2550Limit extends AbstractQuantityLimit{
     public DefaultQuantity2550Limit() {
        quantityLowerLimit = 25;
        quantityUpperLimit = 50;
