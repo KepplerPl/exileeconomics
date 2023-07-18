@@ -12,37 +12,27 @@ import com.exileeconomics.service.CurrencyRatioService;
 import com.exileeconomics.service.ItemAveragePriceEntityService;
 import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 @RequestMapping(("price"))
 @RestController
+@CrossOrigin(origins = "*")
 public class ItemAveragePriceController {
     private final ItemAveragePriceEntityService itemAveragePriceEntityService;
-    private final CurrencyRatioService currencyRatioService;
-    private final ItemDefinitionsService itemDefinitionsService;
     private final PriceRules priceRules;
 
     public ItemAveragePriceController(
             @Autowired ItemAveragePriceEntityService itemAveragePriceEntityService,
-            @Autowired CurrencyRatioService currencyRatioService,
-            @Autowired PriceRules priceRules,
-            @Autowired ItemDefinitionsService itemDefinitionsService
+            @Autowired PriceRules priceRules
     ) {
         this.itemAveragePriceEntityService = itemAveragePriceEntityService;
-        this.currencyRatioService = currencyRatioService;
-        this.itemDefinitionsService = itemDefinitionsService;
         this.priceRules = priceRules;
     }
 
     @GetMapping("/average/{soldItem}/{soldFor}")
-    public ResponseEntity<?> getAveragePriceForItem(@PathVariable ItemDefinitionEnum soldItem, @PathVariable ItemDefinitionEnum soldFor) throws RuleNotFoundException {
+    public AverageItemPriceDTO getAveragePriceForItem(@PathVariable ItemDefinitionEnum soldItem, @PathVariable ItemDefinitionEnum soldFor) throws RuleNotFoundException {
         ItemPriceRule priceRulesForItem = priceRules.getRuleForDefinitionByName(soldItem.getName());
 
         SortedMap<String, List<AveragePriceDTO>> averagePriceForItems = new TreeMap<>();
@@ -71,6 +61,6 @@ public class ItemAveragePriceController {
         averageItemPriceDTO.setSoldFor(soldFor.getName());
         averageItemPriceDTO.setSoldItem(soldItem.getName());
 
-        return new ResponseEntity<>(averageItemPriceDTO, HttpStatus.OK);
+        return averageItemPriceDTO;
     }
 }

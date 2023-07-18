@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @RequestMapping(("ratio"))
 @RestController
+@CrossOrigin(origins = "*")
 public class CurrencyRatioController {
     private final CurrencyRatioService currencyRatioService;
 
