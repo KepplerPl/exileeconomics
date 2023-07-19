@@ -6,7 +6,7 @@ import com.exileeconomics.price.rules.quantity.QuantityLimitInterface;
 import java.util.Objects;
 import java.util.Set;
 
-public class ItemPriceRule implements ItemPriceRuleInterface {
+public class ItemPriceRule {
     private final ItemDefinitionEnum itemDefinitionEnum;
     private final int limit;
     private final int offset;
@@ -23,17 +23,14 @@ public class ItemPriceRule implements ItemPriceRuleInterface {
         return itemDefinitionEnum;
     }
 
-    @Override
     public int getLimit() {
         return limit;
     }
 
-    @Override
     public int getOffset() {
         return offset;
     }
 
-    @Override
     public Set<? extends QuantityLimitInterface> getQuantityLimits() {
         return quantityLimitRules;
     }

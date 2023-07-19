@@ -69,10 +69,12 @@ public class Seeder {
     }
 
     private void seedItemDefinitions() {
-        if(!itemDefinitionsService.findAll().iterator().hasNext()) {
+        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsService.findAll();
+        long size = itemDefinitionEntities.spliterator().getExactSizeIfKnown();
+
+        if(size != ItemDefinitionEnum.values().length) {
             Set<String> existingItemsAsSet = new HashSet<>();
-            Iterable<ItemDefinitionEntity> existingIndexableItems = itemDefinitionsService.findAll();
-            existingIndexableItems.forEach(item -> existingItemsAsSet.add(item.getName()));
+            itemDefinitionEntities.forEach(item -> existingItemsAsSet.add(item.getName()));
 
             ItemDefinitionEnum[] items = ItemDefinitionEnum.values();
 

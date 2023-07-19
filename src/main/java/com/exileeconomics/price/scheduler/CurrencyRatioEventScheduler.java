@@ -51,17 +51,15 @@ public class CurrencyRatioEventScheduler {
         applicationEventPublisher.publishEvent(customSpringEvent);
     }
 
-    // At minute 0 past every 21st hour from 9 through 23.
-    // Or in simpler terms runs at 9AM and again at 11PM, twice a day
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CurrencyRatioException.class})
-    @Scheduled(cron = "0 0 9/21 * * *")
+    @Scheduled(cron = "0 0 23 * * *")
     public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItemEntriesEvery12Hours() throws CurrencyRatioException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now.getTime());
 
-        cal.add(Calendar.HOUR, -12);
+        cal.add(Calendar.HOUR, -24);
         Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
 
         ItemDefinitionEntity chaosOrbEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);

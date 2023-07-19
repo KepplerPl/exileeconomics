@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 
 
 public enum ItemDefinitionEnum {
+    EXOTIC_COINAGE("exotic coinage"),
+    BURIAL_MEDALLION("burial medallion"),
+    SCRAP_METAL("scrap metal"),
+    ASTRAGALI("astragali"),
     WINGED_TORMENT_SCARAB("winged torment scarab"),
     SCREAMING_ESSENCE_OF_ENVY("screaming essence of envy"),
     AMORPHOUS_DELIRIUM_ORB("amorphous delirium orb"),

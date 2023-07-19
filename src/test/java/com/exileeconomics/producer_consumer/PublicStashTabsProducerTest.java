@@ -43,7 +43,7 @@ public class PublicStashTabsProducerTest {
         Mockito.when(connection.getHeaderFields()).thenReturn(getMockHeaders());
         Mockito.when(connection.getResponseCode()).thenReturn(200);
         Mockito.when(requestHandler.getResponseAsString(connection)).thenReturn(
-                Files.readString(Paths.get("src/test/java/com/example/exileeconomics/producer_consumer/test.json"))
+                Files.readString(Paths.get("src/test/java/resources/test.json"))
         );
 
         Mockito.when(nextIdService.save(Mockito.any())).thenAnswer(i -> i.getArguments()[0]);

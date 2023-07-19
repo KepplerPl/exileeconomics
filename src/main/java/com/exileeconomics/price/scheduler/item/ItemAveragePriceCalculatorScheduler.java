@@ -44,8 +44,7 @@ public class ItemAveragePriceCalculatorScheduler {
         this.priceRules = priceRules;
     }
 
-//    @Scheduled(cron = "0 2 9/21 * * *")
-//    @Scheduled(fixedRate = 99999999)
+    @Scheduled(cron = "0 2 23 * * *")
     public void scheduledItemPriceCalculationInsertBasedOnAveragePriceOfItemEntriesEvery12Hours() throws AveragePriceCalculationException, RuleNotFoundException {
         long start = System.currentTimeMillis();
 
@@ -54,7 +53,7 @@ public class ItemAveragePriceCalculatorScheduler {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now.getTime());
 
-        cal.add(Calendar.HOUR, -12);
+        cal.add(Calendar.HOUR, -24);
         Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
 
         Set<ItemDefinitionEnum> itemDefinitionEnums = new HashSet<>(Arrays.asList(ItemDefinitionEnum.values()));
@@ -72,9 +71,9 @@ public class ItemAveragePriceCalculatorScheduler {
                 ), 3
         );
 
-        System.out.println("Starting average price calculating...");
+        System.out.println("Starting average price calculation...");
         // for each currency ratio in the database calculate the price
-        // of each sold itemDefinition sold in the currency ratio
+        // of each sold itemDefinition in the currency ratio
         for (CurrencyRatioEntity soldForItemEntity : itemCurrencyRatios) {
             List<ItemAveragePriceEntity> itemAveragePriceEntities = new ArrayList<>((int) (itemDefinitionEntities.size() + (itemDefinitionEntities.size() * 0.25)));
 

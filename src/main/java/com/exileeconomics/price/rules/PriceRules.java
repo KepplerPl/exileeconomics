@@ -19,10 +19,6 @@ public class PriceRules {
         generateRules();
     }
 
-    public Set<? extends ItemPriceRuleInterface> getPriceRules() {
-        return priceRules;
-    }
-
     public ItemPriceRule getRuleForDefinitionByName(String itemDefinitionEnumName) throws RuleNotFoundException {
         return priceRules.stream().filter(item -> item.getItemDefinitionEnum().getName().equals(itemDefinitionEnumName)).findFirst().orElseThrow(RuleNotFoundException::new);
     }

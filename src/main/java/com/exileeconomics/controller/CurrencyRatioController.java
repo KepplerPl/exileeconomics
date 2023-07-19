@@ -24,7 +24,7 @@ public class CurrencyRatioController {
     public ResponseEntity<?> getMostRecent(@PathVariable ItemDefinitionEnum item) {
         Optional<CurrencyRatioEntity> currencyRatio = currencyRatioService.getMostRecentCurrencyRatioByItemDefinition(item);
         if(currencyRatio.isEmpty()) {
-            return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(currencyRatio.get().getChaos(), HttpStatus.OK);

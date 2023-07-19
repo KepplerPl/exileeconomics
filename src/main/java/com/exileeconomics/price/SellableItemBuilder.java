@@ -37,7 +37,7 @@ public class SellableItemBuilder {
         // ~price 4 orb-of-conflict
         // ~b/o 1/82 divine
         // ~b/o 8 chaos
-        // "~price  chaos" <-- not a mistake, that's how it arrives from the api(possible bug in the api itself)
+        // "~price  chaos" - not a mistake, that's how it arrives from the api
         price = parts[1];
         if(price.trim().equals("")) {
             throw new InvalidPriceException(String.format("Price %s is not recognized as a valid price", price));
