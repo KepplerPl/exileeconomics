@@ -1,10 +1,9 @@
-package com.exileeconomics.producer_consumer;
+package com.exileeconomics.producer_consumer.producer;
 
 import com.exileeconomics.entity.NextIdEntity;
 import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
 import com.exileeconomics.http.Throttler;
-import com.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
 import com.exileeconomics.service.NextIdService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -8,6 +8,7 @@ import com.exileeconomics.price.exception.InvalidPriceException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class SellableItemBuilder {
     private final HashMap<String, ItemDefinitionEnum> currencyApiNameToEnum = new HashMap<>(){{
@@ -17,17 +18,17 @@ public class SellableItemBuilder {
     }};
 
     private final BigDecimal maxPrice;
-    private final CurrencyRatioProducer currencyRatioProducer;
+    private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap;
 
-    public SellableItemBuilder(CurrencyRatioProducer currencyRatioProducer) {
-        this.currencyRatioProducer = currencyRatioProducer;
+    public SellableItemBuilder(ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
         this.maxPrice = new BigDecimal(300_000);
+        this.currencyRatioMap = currencyRatioMap;
     }
 
     public SellableItemDTO parsePrice(String price) throws InvalidCurrencyException, InvalidPriceException {
         String[] parts = price.split(" ");
         if(parts.length < 3) {
-            throw new InvalidCurrencyException(String.format("Cannot parse currency %s", price));
+            throw new InvalidCurrencyException(String.format("Cannot parse currency from price %s", price));
         }
 
         // the actual price is always the 2nd part of the string
@@ -40,7 +41,7 @@ public class SellableItemBuilder {
         // "~price  chaos" - not a mistake, that's how it arrives from the api
         price = parts[1];
         if(price.trim().equals("")) {
-            throw new InvalidPriceException(String.format("Price %s is not recognized as a valid price", price));
+            throw new InvalidPriceException("Price is an empty string");
         }
 
         if(!currencyApiNameToEnum.containsKey(parts[2])) {
@@ -48,7 +49,7 @@ public class SellableItemBuilder {
         }
 
         ItemDefinitionEnum boughtFor = currencyApiNameToEnum.get(parts[2]);
-        CurrencyRatioEntity currencyRatioInChaos = currencyRatioProducer.getRatioFor(boughtFor);
+        CurrencyRatioEntity currencyRatioInChaos = currencyRatioMap.get(boughtFor);
         BigDecimal currencyRatio = currencyRatioInChaos.getChaos();
 
         BigDecimal resultingPrice;

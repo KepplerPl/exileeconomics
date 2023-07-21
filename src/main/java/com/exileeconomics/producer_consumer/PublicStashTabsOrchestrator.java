@@ -2,6 +2,7 @@ package com.exileeconomics.producer_consumer;
 
 import com.exileeconomics.AppProperties;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
+import com.exileeconomics.entity.CurrencyRatioEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
@@ -20,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import com.exileeconomics.service.ItemEntityService;
 
@@ -38,6 +38,7 @@ public final class PublicStashTabsOrchestrator {
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private final CurrencyRatioService currencyRatioService;
     private CurrencyRatioProducer currencyRatioProducer;
+    private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new ConcurrentHashMap<>();
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
     public PublicStashTabsOrchestrator(
@@ -46,8 +47,7 @@ public final class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsService itemDefinitionsService,
             @Autowired NextIdService nextIdService,
             @Autowired ItemEntityService itemEntityService,
-            @Autowired CurrencyRatioService currencyRatioService,
-            @Autowired RedisTemplate<String, String> redisTemplate
+            @Autowired CurrencyRatioService currencyRatioService
             ) {
         this.requestHandler = requestHandler;
         this.appProperties = appProperties;
@@ -69,7 +69,7 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void initCurrencyRatio() {
-        currencyRatioProducer = new CurrencyRatioProducer(ParsableCurrency.getParsableCurrencies(), currencyRatioService, itemDefinitionsService);
+        currencyRatioProducer = new CurrencyRatioProducer(ParsableCurrency.getParsableCurrencies(), currencyRatioMap, currencyRatioService, itemDefinitionsService);
         currencyRatioProducer.setCountDownLatch(countDownLatchForCurrencyRatioInitialization);
     }
 
@@ -82,7 +82,7 @@ public final class PublicStashTabsOrchestrator {
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
                 new PublicStashTabsDeserializer(
                         appProperties.getActiveLeague(),
-                        new SellableItemBuilder(currencyRatioProducer)
+                        new SellableItemBuilder(currencyRatioMap)
                 )
         );
 

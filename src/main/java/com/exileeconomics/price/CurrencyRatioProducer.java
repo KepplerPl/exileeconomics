@@ -8,32 +8,27 @@ import com.exileeconomics.producer_consumer.NoSuppressedRunnable;
 import com.exileeconomics.service.CurrencyRatioService;
 import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.context.ApplicationListener;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.StreamSupport;
 
-@Component
 public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationListener<CurrencyRatioUpdateEvent> {
     private final Set<ItemDefinitionEnum> parsableCurrencies;
-    private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
+    private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap;
     private final CurrencyRatioService currencyRatioService;
     private final ItemDefinitionsService itemDefinitionsService;
     private CountDownLatch countDownLatch;
 
-    public CurrencyRatioEntity getRatioFor(ItemDefinitionEnum itemDefinitionEnum) {
-        synchronized (currencyRatioMap) {
-            return currencyRatioMap.get(itemDefinitionEnum);
-        }
-    }
-
     public CurrencyRatioProducer(
             Set<ItemDefinitionEnum> parsableCurrencies,
+            ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap,
             CurrencyRatioService currencyRatioService,
             ItemDefinitionsService itemDefinitionsService
     ) {
         this.parsableCurrencies = parsableCurrencies;
+        this.currencyRatioMap = currencyRatioMap;
         this.currencyRatioService = currencyRatioService;
         this.itemDefinitionsService = itemDefinitionsService;
     }
@@ -63,9 +58,7 @@ public class CurrencyRatioProducer implements NoSuppressedRunnable, ApplicationL
 
     @Override
     public void onApplicationEvent(CurrencyRatioUpdateEvent event) {
-        synchronized (currencyRatioMap) {
-            currencyRatioMap.clear();
-            currencyRatioMap.putAll(event.getCurrencyRatioMap());
-        }
+        currencyRatioMap.clear();
+        currencyRatioMap.putAll(event.getCurrencyRatioMap());
     }
 }

@@ -15,6 +15,8 @@ public class CurrencyRatioUpdateEvent extends ApplicationEvent {
     }
 
     public Map<ItemDefinitionEnum, CurrencyRatioEntity> getCurrencyRatioMap() {
-        return currencyRatioMap;
+        synchronized (currencyRatioMap){
+            return currencyRatioMap;
+        }
     }
 }

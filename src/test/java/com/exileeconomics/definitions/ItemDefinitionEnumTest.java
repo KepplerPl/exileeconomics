@@ -14,7 +14,7 @@ public class ItemDefinitionEnumTest {
         assertEquals(389, ItemDefinitionEnum.values().length);
     }
     @Test
-    public void testThrowsInvalidCurrencyException() {
+    public void testThrowsIllegalArgumentException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ItemDefinitionEnum.fromString("wrong name"));
 
         assertTrue(exception.getMessage().contains("Unrecognized enum value, got wrong name"));
