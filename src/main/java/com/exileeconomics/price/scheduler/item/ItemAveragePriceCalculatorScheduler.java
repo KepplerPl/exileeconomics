@@ -73,7 +73,12 @@ public class ItemAveragePriceCalculatorScheduler {
 
         System.out.println("Starting average price calculation...");
         // for each currency ratio in the database calculate the price
-        // of each sold itemDefinition in the currency ratio
+        // of each sold itemDefinition in that currency ratio
+        //
+        // for example
+        // Essence of Hysteria -> Chaos Orb
+        // Essence of Hysteria -> Divine Orb
+        // Essence of Hysteria -> Awakened Sextant
         for (CurrencyRatioEntity soldForItemEntity : itemCurrencyRatios) {
             List<ItemAveragePriceEntity> itemAveragePriceEntities = new ArrayList<>((int) (itemDefinitionEntities.size() + (itemDefinitionEntities.size() * 0.25)));
 

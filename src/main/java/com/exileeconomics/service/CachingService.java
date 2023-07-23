@@ -26,4 +26,7 @@ public class CachingService {
         return redisTemplate.opsForValue().get(key);
     }
 
+    public Boolean delete(final String key) {
+        return redisTemplate.delete(key);
+    }
 }

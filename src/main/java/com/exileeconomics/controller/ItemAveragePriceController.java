@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 @RequestMapping(("price"))
 @RestController
-@CrossOrigin(origins = "*")
 public class ItemAveragePriceController {
     private final ItemAveragePriceEntityService itemAveragePriceEntityService;
     private final PriceRules priceRules;
