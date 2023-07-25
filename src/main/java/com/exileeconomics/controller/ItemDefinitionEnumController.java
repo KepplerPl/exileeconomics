@@ -1,22 +1,29 @@
 package com.exileeconomics.controller;
 
 import com.exileeconomics.definitions.ItemDefinitionEnum;
+import com.exileeconomics.entity.ItemDefinitionEntity;
+import com.exileeconomics.price.dto.ItemDefinitionResponseDTO;
 import com.exileeconomics.service.CachingService;
+import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @RestController
 public class ItemDefinitionEnumController {
     private final CachingService cachingService;
+    private final ItemDefinitionsService itemDefinitionsService;
 
-    public ItemDefinitionEnumController(@Autowired CachingService cachingService) {
+    public ItemDefinitionEnumController(
+            @Autowired CachingService cachingService,
+            @Autowired ItemDefinitionsService itemDefinitionsService
+            ) {
         this.cachingService = cachingService;
+        this.itemDefinitionsService = itemDefinitionsService;
     }
 
     @GetMapping("/items")
@@ -27,14 +34,21 @@ public class ItemDefinitionEnumController {
             return new ResponseEntity<>(result, HttpStatus.OK);
         }
 
-        ItemDefinitionEnum[] itemNames = ItemDefinitionEnum.values();
-        Map<ItemDefinitionEnum, String> itemEnumsAndNames = new HashMap<>();
-        for (ItemDefinitionEnum itemName : itemNames) {
-            itemEnumsAndNames.put(itemName, itemName.getName().substring(0,1).toUpperCase() + itemName.getName().substring(1).toLowerCase());
+        Iterator<ItemDefinitionEntity> iterator = itemDefinitionsService.findAll().iterator();
+        List<ItemDefinitionResponseDTO> itemDefinitionResponseDTOS = new ArrayList<>();
+
+        while(iterator.hasNext()) {
+            ItemDefinitionEntity itemDefinitionEntity = iterator.next();
+            ItemDefinitionResponseDTO itemDefinitionResponseDTO = new ItemDefinitionResponseDTO();
+            itemDefinitionResponseDTO.setItemDefinitionEnum(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()));
+            itemDefinitionResponseDTO.setIcon(itemDefinitionEntity.getIcon());
+            itemDefinitionResponseDTO.setName(itemDefinitionEntity.getName());
+
+            itemDefinitionResponseDTOS.add(itemDefinitionResponseDTO);
         }
 
-        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemEnumsAndNames, 1, TimeUnit.HOURS);
+        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemDefinitionResponseDTOS, 1, TimeUnit.HOURS);
 
-        return new ResponseEntity<>(itemEnumsAndNames, HttpStatus.OK);
+        return new ResponseEntity<>(itemDefinitionResponseDTOS, HttpStatus.OK);
     }
 }

@@ -12,6 +12,16 @@ public final class ItemDTO {
     private int totalQuantity;
     private int soldQuantity;
 
+    private String icon;
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
     public CurrencyRatioEntity getCurrencyRatio() {
         return currencyRatio;
     }

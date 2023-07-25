@@ -16,6 +16,7 @@ public class ItemDefinitionEntity extends AbstractEntity{
     private Long id;
     @Column(unique = true)
     private String name;
+    private String icon;
     protected Timestamp createdAt;
 
     @PrePersist
@@ -41,5 +42,13 @@ public class ItemDefinitionEntity extends AbstractEntity{
 
     public Timestamp getCreatedAt() {
         return createdAt;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 }

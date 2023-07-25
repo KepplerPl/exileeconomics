@@ -27,13 +27,6 @@ public class CurrencyRatioEventScheduler {
     private final ItemDefinitionsService itemDefinitionsService;
     private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
-    /**
-     * I noticed that 40 items is generally the sweet spot for a correct average price
-     * <p>
-     * the problem is that this can get HEAVILY skewed if there aren't enough items on the market
-     */
-    private final int IMPOSED_LIMIT = 40;
-
     public CurrencyRatioEventScheduler(
             @Autowired ApplicationEventPublisher applicationEventPublisher,
             @Autowired CurrencyRatioService currencyRatioService,
@@ -69,10 +62,6 @@ public class CurrencyRatioEventScheduler {
         BigDecimal divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity);
         saveDivineAveragePrice(divineOrbEntity, divineAveragePrice);
 
-        ItemDefinitionEntity sextantEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.AWAKENED_SEXTANT);
-        BigDecimal sextantAveragePrice = calculateAveragePriceForSextant(now, nowMinus12Hours, chaosOrbEntity, sextantEntity);
-        saveSextantAveragePrice(sextantEntity, sextantAveragePrice);
-
         // add one for chaos as well, even though it's not calculated
         ItemDefinitionEntity chaosEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);
         saveChaosAveragePrice(chaosEntity);
@@ -82,52 +71,36 @@ public class CurrencyRatioEventScheduler {
         publishCurrencyRatioRecalculatedEvent(currencyRatioMap);
     }
 
-    private BigDecimal calculateAveragePriceForSextant(
-            Timestamp now,
-            Timestamp nowMinus12Hours,
-            ItemDefinitionEntity chaosOrbEntity,
-            ItemDefinitionEntity sextantEntity
-    ) throws CurrencyRatioException {
-        Collection<ItemEntity> pricesInBetweenDates = itemEntityService.getPricesForItemsBetweenDatesWithLimitAndOffset(
-                sextantEntity.getId(),
-                chaosOrbEntity.getId(),
-                200,
-                nowMinus12Hours,
-                now,
-                10,
-                IMPOSED_LIMIT
-        );
-
-        BigDecimal lowerLimit = BigDecimal.valueOf(1);
-        BigDecimal upperLimit = BigDecimal.valueOf(30);
-        return getPriceAsBigDecimalAverage(pricesInBetweenDates, lowerLimit, upperLimit);
-    }
-
     private BigDecimal calculateAveragePriceForDivine(Timestamp now,
                                                       Timestamp nowMinus12Hours,
                                                       ItemDefinitionEntity chaosOrbEntity,
                                                       ItemDefinitionEntity divineOrbEntity
     ) throws CurrencyRatioException {
+        /*
+         * I noticed that 30 items is generally the sweet spot for a correct average price
+         * <p>
+         * the problem is that this can get HEAVILY skewed if there aren't enough items on the market
+         */
         Collection<ItemEntity> pricesInBetweenDates = itemEntityService.getPricesForItemsBetweenDatesWithLimitAndOffset(
                 divineOrbEntity.getId(),
                 chaosOrbEntity.getId(),
                 200,
                 nowMinus12Hours,
                 now,
-                10,
-                IMPOSED_LIMIT
+                30,
+                10
         );
 
+        /*
+         * Imposed limit on min/max price for divine
+         */
         BigDecimal lowerLimit = BigDecimal.valueOf(5);
         BigDecimal upperLimit = BigDecimal.valueOf(300);
-        return getPriceAsBigDecimalAverage(pricesInBetweenDates, lowerLimit, upperLimit);
-    }
-
-    private BigDecimal getPriceAsBigDecimalAverage(
-            Collection<ItemEntity> pricesInBetweenDates,
-            BigDecimal lowerLimit, BigDecimal upperLimit
-    ) throws CurrencyRatioException {
         pricesInBetweenDates.removeIf(next -> next.getPrice().compareTo(lowerLimit) < 0 || next.getPrice().compareTo(upperLimit) > 0);
+        if(pricesInBetweenDates.isEmpty()) {
+            throw new CurrencyRatioException("No entities to calculate the price from");
+        }
+
         OptionalDouble averagePrice = pricesInBetweenDates.stream().mapToDouble(item -> item.getPrice().doubleValue()).average();
 
         if (averagePrice.isPresent()) {
@@ -144,16 +117,6 @@ public class CurrencyRatioEventScheduler {
         divineCurrencyRatio.setItemDefinitionEntity(divineOrbEntity);
         divineCurrencyRatio.setChaos(divineAveragePrice);
         currencyRatioMap.put(ItemDefinitionEnum.DIVINE_ORB, divineCurrencyRatio);
-    }
-
-    private void saveSextantAveragePrice(
-            ItemDefinitionEntity sextantEntity,
-            BigDecimal sextantAveragePrice
-    ) {
-        CurrencyRatioEntity sextantCurrencyRatio = new CurrencyRatioEntity();
-        sextantCurrencyRatio.setItemDefinitionEntity(sextantEntity);
-        sextantCurrencyRatio.setChaos(sextantAveragePrice);
-        currencyRatioMap.put(ItemDefinitionEnum.AWAKENED_SEXTANT, sextantCurrencyRatio);
     }
 
     private void saveChaosAveragePrice(ItemDefinitionEntity chaosEntity) {

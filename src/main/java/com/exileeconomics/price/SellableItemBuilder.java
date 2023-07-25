@@ -14,7 +14,6 @@ public class SellableItemBuilder {
     private final HashMap<String, ItemDefinitionEnum> currencyApiNameToEnum = new HashMap<>(){{
        put("chaos", ItemDefinitionEnum.CHAOS_ORB);
        put("divine", ItemDefinitionEnum.DIVINE_ORB);
-       put("awakened-sextant", ItemDefinitionEnum.AWAKENED_SEXTANT);
     }};
 
     private final BigDecimal maxPrice;

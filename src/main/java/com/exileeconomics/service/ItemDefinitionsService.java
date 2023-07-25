@@ -30,12 +30,17 @@ public class ItemDefinitionsService {
         return itemDefinitionsRepository.save(itemDefinitionEntity);
     }
 
-    public Collection<ItemDefinitionEntity> findAllItemDefinitionEntitiesByItemDefinitionEnums(Set<ItemDefinitionEnum> itemSets) {
-        Set<String> strings = itemSets.stream().map(ItemDefinitionEnum::getName).collect(Collectors.toSet());
-        return itemDefinitionsRepository.findAllByNameIn(strings);
+    public Collection<ItemDefinitionEntity> findAllItemDefinitionEntitiesByItemDefinitionEnums(Collection<ItemDefinitionEnum> itemSets) {
+        return itemDefinitionsRepository.findAllByNameIn(
+                itemSets.stream().map(ItemDefinitionEnum::getName).collect(Collectors.toSet())
+        );
     }
 
     public ItemDefinitionEntity findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum itemDefinitionEnum) {
         return itemDefinitionsRepository.getFirstByName(itemDefinitionEnum.getName());
+    }
+
+    public Iterable<ItemDefinitionEntity> saveAll(Iterable<ItemDefinitionEntity> entities) {
+        return itemDefinitionsRepository.saveAll(entities);
     }
 }

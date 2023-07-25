@@ -40,6 +40,7 @@ public final class PublicStashTabsOrchestrator {
     private CurrencyRatioProducer currencyRatioProducer;
     private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new ConcurrentHashMap<>();
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
+    private final ParsableCurrency parsableCurrency;
 
     public PublicStashTabsOrchestrator(
             @Autowired RequestHandler requestHandler,
@@ -47,7 +48,8 @@ public final class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsService itemDefinitionsService,
             @Autowired NextIdService nextIdService,
             @Autowired ItemEntityService itemEntityService,
-            @Autowired CurrencyRatioService currencyRatioService
+            @Autowired CurrencyRatioService currencyRatioService,
+            @Autowired ParsableCurrency parsableCurrency
             ) {
         this.requestHandler = requestHandler;
         this.appProperties = appProperties;
@@ -55,6 +57,7 @@ public final class PublicStashTabsOrchestrator {
         this.itemDefinitionsService = itemDefinitionsService;
         this.nextIdService = nextIdService;
         this.currencyRatioService = currencyRatioService;
+        this.parsableCurrency = parsableCurrency;
         countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
     }
 
@@ -69,7 +72,7 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void initCurrencyRatio() {
-        currencyRatioProducer = new CurrencyRatioProducer(ParsableCurrency.getParsableCurrencies(), currencyRatioMap, currencyRatioService, itemDefinitionsService);
+        currencyRatioProducer = new CurrencyRatioProducer(parsableCurrency, currencyRatioMap);
         currencyRatioProducer.setCountDownLatch(countDownLatchForCurrencyRatioInitialization);
     }
 
