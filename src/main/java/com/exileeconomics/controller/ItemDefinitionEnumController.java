@@ -1,6 +1,7 @@
 package com.exileeconomics.controller;
 
 import com.exileeconomics.definitions.ItemDefinitionEnum;
+import com.exileeconomics.definitions.ItemDefinitionEnumCategoryMapper;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.price.dto.ItemDefinitionResponseDTO;
 import com.exileeconomics.service.CachingService;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.StreamSupport;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @RestController
 public class ItemDefinitionEnumController {
@@ -34,21 +38,23 @@ public class ItemDefinitionEnumController {
             return new ResponseEntity<>(result, HttpStatus.OK);
         }
 
-        Iterator<ItemDefinitionEntity> iterator = itemDefinitionsService.findAll().iterator();
-        List<ItemDefinitionResponseDTO> itemDefinitionResponseDTOS = new ArrayList<>();
+        Iterable<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsService.findAll();
 
-        while(iterator.hasNext()) {
-            ItemDefinitionEntity itemDefinitionEntity = iterator.next();
-            ItemDefinitionResponseDTO itemDefinitionResponseDTO = new ItemDefinitionResponseDTO();
-            itemDefinitionResponseDTO.setItemDefinitionEnum(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()));
-            itemDefinitionResponseDTO.setIcon(itemDefinitionEntity.getIcon());
-            itemDefinitionResponseDTO.setName(itemDefinitionEntity.getName());
+       Map<ItemDefinitionEnumCategoryMapper, List<ItemDefinitionResponseDTO>> itemDefinitionEnumCategoryMapperListMap = StreamSupport
+                .stream(itemDefinitionEntities.spliterator(), false)
+                .map(itemDefinitionEntity -> {
+                    ItemDefinitionResponseDTO itemDefinitionResponseDTO = new ItemDefinitionResponseDTO();
+                    itemDefinitionResponseDTO.setMachineName(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()));
+                    itemDefinitionResponseDTO.setIcon(itemDefinitionEntity.getIcon());
+                    itemDefinitionResponseDTO.setReadableName(itemDefinitionEntity.getName());
+                    return itemDefinitionResponseDTO;
+                })
+                .collect(groupingBy(
+                        itemDefinitionEntity -> ItemDefinitionEnum.getCategoryFromName(itemDefinitionEntity.getMachineName().getName())
+                ));
 
-            itemDefinitionResponseDTOS.add(itemDefinitionResponseDTO);
-        }
+        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemDefinitionEnumCategoryMapperListMap, 1, TimeUnit.HOURS);
 
-        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemDefinitionResponseDTOS, 1, TimeUnit.HOURS);
-
-        return new ResponseEntity<>(itemDefinitionResponseDTOS, HttpStatus.OK);
+        return new ResponseEntity<>(itemDefinitionEnumCategoryMapperListMap, HttpStatus.OK);
     }
 }

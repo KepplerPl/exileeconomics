@@ -3,24 +3,24 @@ package com.exileeconomics.price.dto;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 
 public class ItemDefinitionResponseDTO {
-    private ItemDefinitionEnum itemDefinitionEnum;
-    private String name;
+    private ItemDefinitionEnum machineName;
+    private String readableName;
     private String icon;
 
-    public ItemDefinitionEnum getItemDefinitionEnum() {
-        return itemDefinitionEnum;
+    public ItemDefinitionEnum getMachineName() {
+        return machineName;
     }
 
-    public void setItemDefinitionEnum(ItemDefinitionEnum itemDefinitionEnum) {
-        this.itemDefinitionEnum = itemDefinitionEnum;
+    public void setMachineName(ItemDefinitionEnum machineName) {
+        this.machineName = machineName;
     }
 
-    public String getName() {
-        return name;
+    public String getReadableName() {
+        return readableName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setReadableName(String readableName) {
+        this.readableName = readableName;
     }
 
     public String getIcon() {

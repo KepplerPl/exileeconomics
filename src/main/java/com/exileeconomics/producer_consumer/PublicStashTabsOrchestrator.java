@@ -14,7 +14,6 @@ import com.exileeconomics.price.ParsableCurrency;
 import com.exileeconomics.price.SellableItemBuilder;
 import com.exileeconomics.producer_consumer.consumer.PublicStashTabsConsumer;
 import com.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
-import com.exileeconomics.service.CurrencyRatioService;
 import com.exileeconomics.service.ItemDefinitionsService;
 import com.exileeconomics.service.NextIdService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,6 @@ public final class PublicStashTabsOrchestrator {
     private final ItemEntityService itemEntityService;
     private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(50);
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-    private final CurrencyRatioService currencyRatioService;
     private CurrencyRatioProducer currencyRatioProducer;
     private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new ConcurrentHashMap<>();
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
@@ -48,7 +46,6 @@ public final class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsService itemDefinitionsService,
             @Autowired NextIdService nextIdService,
             @Autowired ItemEntityService itemEntityService,
-            @Autowired CurrencyRatioService currencyRatioService,
             @Autowired ParsableCurrency parsableCurrency
             ) {
         this.requestHandler = requestHandler;
@@ -56,7 +53,6 @@ public final class PublicStashTabsOrchestrator {
         this.itemEntityService = itemEntityService;
         this.itemDefinitionsService = itemDefinitionsService;
         this.nextIdService = nextIdService;
-        this.currencyRatioService = currencyRatioService;
         this.parsableCurrency = parsableCurrency;
         countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
     }
