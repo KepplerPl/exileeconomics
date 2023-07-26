@@ -21,9 +21,4 @@ public class AbstractQuantityLimit implements QuantityLimitInterface{
     public void setQuantityUpperLimit(int quantityUpperLimit) {
         this.quantityUpperLimit = quantityUpperLimit;
     }
-
-    @Override
-    public int compareTo(AbstractQuantityLimit o) {
-        return Integer.compare(o.getQuantityUpperLimit(), getQuantityUpperLimit());
-    }
 }

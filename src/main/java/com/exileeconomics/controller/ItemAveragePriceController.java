@@ -35,6 +35,12 @@ public class ItemAveragePriceController {
         this.cachingService = cachingService;
     }
 
+    @GetMapping("/average/{soldFor}")
+    public ResponseEntity<?> getAveragePriceForAllItemsSoldFor(@PathVariable ItemDefinitionEnum soldFor) {
+        // TODO implement this
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @GetMapping("/average/{soldItem}/{soldFor}")
     public ResponseEntity<?> getAveragePriceForItem(@PathVariable ItemDefinitionEnum soldItem, @PathVariable ItemDefinitionEnum soldFor) throws RuleNotFoundException {
         String key = soldItem + "-" + soldFor;

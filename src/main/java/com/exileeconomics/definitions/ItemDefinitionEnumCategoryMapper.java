@@ -13,5 +13,9 @@ public enum ItemDefinitionEnumCategoryMapper {
     FOSSIL,
     FRAGMENT,
     VIAL,
-    CURRENCY
+    CURRENCY,
+    INCUBATOR,
+    INVITATION,
+    BEAST,
+    CATALYST,
 }

@@ -33,7 +33,7 @@ public class PriceRules {
                     QuantityLimit quantityLimit3 = new QuantityLimit(30001, 50000);
                     itemPriceRule = new ItemPriceRule(
                             itemDefinitionEnum,
-                            40,
+                            30,
                             10,
                             Set.of(quantityLimit3, quantityLimit2, quantityLimit1)
                     );
@@ -52,7 +52,7 @@ public class PriceRules {
                 }
                 default -> itemPriceRule = new ItemPriceRule(
                         itemDefinitionEnum,
-                        40,
+                        30,
                         10,
                         Set.of(
                                 new DefaultQuantity025Limit(),
