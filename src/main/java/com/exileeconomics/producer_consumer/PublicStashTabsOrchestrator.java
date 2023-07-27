@@ -4,6 +4,7 @@ import com.exileeconomics.AppProperties;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.entity.CurrencyRatioEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
+import com.exileeconomics.entity.ItemEntityMod;
 import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
 import com.exileeconomics.http.Throttler;
@@ -15,6 +16,7 @@ import com.exileeconomics.price.SellableItemBuilder;
 import com.exileeconomics.producer_consumer.consumer.PublicStashTabsConsumer;
 import com.exileeconomics.producer_consumer.producer.PublicStashTabsProducer;
 import com.exileeconomics.service.ItemDefinitionsService;
+import com.exileeconomics.service.ItemEntityModService;
 import com.exileeconomics.service.NextIdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -33,12 +35,14 @@ public final class PublicStashTabsOrchestrator {
     private final NextIdService nextIdService;
     private final ItemDefinitionsService itemDefinitionsService;
     private final ItemEntityService itemEntityService;
-    private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(50);
+    private final BlockingQueue<String> jsonResponsesQueue = new ArrayBlockingQueue<>(40);
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private CurrencyRatioProducer currencyRatioProducer;
     private final ConcurrentMap<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new ConcurrentHashMap<>();
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
     private final ParsableCurrency parsableCurrency;
+    private final ItemEntityModService itemEntityModService;
+    private final ConcurrentMap<String, ItemEntityMod> existingItemEntityMods = new ConcurrentHashMap<>();
 
     public PublicStashTabsOrchestrator(
             @Autowired RequestHandler requestHandler,
@@ -46,7 +50,8 @@ public final class PublicStashTabsOrchestrator {
             @Autowired ItemDefinitionsService itemDefinitionsService,
             @Autowired NextIdService nextIdService,
             @Autowired ItemEntityService itemEntityService,
-            @Autowired ParsableCurrency parsableCurrency
+            @Autowired ParsableCurrency parsableCurrency,
+            @Autowired ItemEntityModService itemEntityModService
             ) {
         this.requestHandler = requestHandler;
         this.appProperties = appProperties;
@@ -54,13 +59,15 @@ public final class PublicStashTabsOrchestrator {
         this.itemDefinitionsService = itemDefinitionsService;
         this.nextIdService = nextIdService;
         this.parsableCurrency = parsableCurrency;
-        countDownLatchForCurrencyRatioInitialization = new CountDownLatch(1);
+        this.itemEntityModService = itemEntityModService;
+        countDownLatchForCurrencyRatioInitialization = new CountDownLatch(2);
     }
 
     @EventListener
     @Order(value = 2)
     public void onApplicationEvent(ApplicationReadyEvent event){
         initCurrencyRatio();
+        getCurrentItemEntityMods();
 
         startCurrencyRatioUpdater();
         startPublicStashProducer();
@@ -79,10 +86,7 @@ public final class PublicStashTabsOrchestrator {
 
     private void startPublicStashConsumer() {
         PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
-                new PublicStashTabsDeserializer(
-                        appProperties.getActiveLeague(),
-                        new SellableItemBuilder(currencyRatioMap)
-                )
+                new PublicStashTabsDeserializer(appProperties.getActiveLeague(), new SellableItemBuilder(currencyRatioMap))
         );
 
         PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
@@ -90,7 +94,10 @@ public final class PublicStashTabsOrchestrator {
                 getItemDefinitions(),
                 itemEntityService,
                 countDownLatchForCurrencyRatioInitialization,
-                publicStashTabsDeserializerFromJson
+                publicStashTabsDeserializerFromJson,
+                itemDefinitionsService,
+                existingItemEntityMods,
+                itemEntityModService
         );
         executorService.scheduleWithFixedDelay(publicStashTabsConsumer, 10_000, 10_000, TimeUnit.MILLISECONDS);
     }
@@ -107,7 +114,14 @@ public final class PublicStashTabsOrchestrator {
         executorService.scheduleWithFixedDelay(publicStashTabsProducer, 100, 200, TimeUnit.MILLISECONDS);
     }
 
-    private HashMap<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
+    private void getCurrentItemEntityMods() {
+        for (ItemEntityMod itemEntityMod : itemEntityModService.findAll()) {
+            existingItemEntityMods.put(itemEntityMod.getMod(), itemEntityMod);
+        }
+        countDownLatchForCurrencyRatioInitialization.countDown();
+    }
+
+    private Map<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
         Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
         final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
 

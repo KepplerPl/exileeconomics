@@ -1,20 +1,21 @@
 package com.exileeconomics.mapper.serializer;
 
-import com.exileeconomics.mapper.PublicStashTabsDTO;
+import com.exileeconomics.mapper.ItemDTO;
 import com.exileeconomics.mapper.deserializer.ApiDeserializer;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
-public class PublicStashTabsDeserializerFromJson implements JsonDeserializer<PublicStashTabsDTO> {
-    private final ApiDeserializer<PublicStashTabsDTO> deserializer;
+public class PublicStashTabsDeserializerFromJson implements JsonDeserializer<List<ItemDTO>> {
+    private final ApiDeserializer<List<ItemDTO>> deserializer;
 
-    public PublicStashTabsDeserializerFromJson(ApiDeserializer<PublicStashTabsDTO> deserializer) {
+    public PublicStashTabsDeserializerFromJson(ApiDeserializer<List<ItemDTO>> deserializer) {
         this.deserializer = deserializer;
     }
 
     @Override
-    public PublicStashTabsDTO deserialize(JsonElement jElement, Type typeOfT, JsonDeserializationContext context) {
+    public List<ItemDTO> deserialize(JsonElement jElement, Type typeOfT, JsonDeserializationContext context) {
         return deserializer.fromJson(jElement.getAsJsonObject());
     }
 }

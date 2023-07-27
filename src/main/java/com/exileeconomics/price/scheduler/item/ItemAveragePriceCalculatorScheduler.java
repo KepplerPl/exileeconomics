@@ -55,7 +55,7 @@ public class ItemAveragePriceCalculatorScheduler {
         cal.setTimeInMillis(now.getTime());
 
         cal.add(Calendar.HOUR, -24);
-        Timestamp nowMinus12Hours = new Timestamp(cal.getTime().getTime());
+        Timestamp nowMinus24Hours = new Timestamp(cal.getTime().getTime());
 
         Set<ItemDefinitionEnum> itemDefinitionEnums = new HashSet<>(Arrays.asList(ItemDefinitionEnum.values()));
         Collection<ItemDefinitionEntity> itemDefinitionEntities = itemDefinitionsService.findAllItemDefinitionEntitiesByItemDefinitionEnums(itemDefinitionEnums);
@@ -68,14 +68,13 @@ public class ItemAveragePriceCalculatorScheduler {
         // for example
         // Essence of Hysteria -> Chaos Orb
         // Essence of Hysteria -> Divine Orb
-        // Essence of Hysteria -> Awakened Sextant
-        calculateAndSaveAveragePrice(now, nowMinus12Hours, itemDefinitionEntities, itemCurrencyRatios);
+        calculateAndSaveAveragePrice(now, nowMinus24Hours, itemDefinitionEntities, itemCurrencyRatios);
 
         long finish = System.currentTimeMillis();
         System.out.printf("Finished scheduler for item price in %d milliseconds", (finish - start));
     }
 
-    private void calculateAndSaveAveragePrice(Timestamp now, Timestamp nowMinus12Hours, Collection<ItemDefinitionEntity> itemDefinitionEntities, Collection<CurrencyRatioEntity> itemCurrencyRatios) throws AveragePriceCalculationException, RuleNotFoundException {
+    private void calculateAndSaveAveragePrice(Timestamp now, Timestamp nowMinus24Hours, Collection<ItemDefinitionEntity> itemDefinitionEntities, Collection<CurrencyRatioEntity> itemCurrencyRatios) throws AveragePriceCalculationException, RuleNotFoundException {
         for (CurrencyRatioEntity soldForItemEntity : itemCurrencyRatios) {
             List<ItemAveragePriceEntity> itemAveragePriceEntities = new ArrayList<>((int) (itemDefinitionEntities.size() + (itemDefinitionEntities.size() * 0.25)));
 
@@ -88,7 +87,7 @@ public class ItemAveragePriceCalculatorScheduler {
                     BigDecimal averagePrice;
                     try {
                         averagePrice = averageItemPriceCalculator.calculateAveragePriceFor(
-                                nowMinus12Hours,
+                                nowMinus24Hours,
                                 now,
                                 soldItemEntity,
                                 soldForItemEntity.getItemDefinitionEntity(),

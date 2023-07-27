@@ -18,4 +18,7 @@ public enum ItemDefinitionEnumCategoryMapper {
     INVITATION,
     BEAST,
     CATALYST,
+    UNIQUE_JEWEL,
+    UNIQUE_ACCESSORIES,
+    UNIQUE_FLAKS,
 }

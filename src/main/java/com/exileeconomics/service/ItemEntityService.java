@@ -42,6 +42,11 @@ public class ItemEntityService {
         return itemEntityRepository.saveAll(entities);
     }
 
+
+    public ItemEntity save(ItemEntity entity) {
+        return itemEntityRepository.save(entity);
+    }
+
     public Collection<ItemEntity> getPricesForItemsBetweenDatesWithLimitAndOffset(
             long soldItemId,
             long soldForItemId,

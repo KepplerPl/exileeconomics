@@ -1,19 +1,22 @@
 package com.exileeconomics.mapper.deserializer;
 
 import com.exileeconomics.definitions.ItemDefinitionEnum;
+import com.exileeconomics.definitions.ItemDefinitionEnumCategoryMapper;
+import com.exileeconomics.entity.ItemEntityMod;
 import com.exileeconomics.mapper.ItemDTO;
-import com.exileeconomics.mapper.PublicStashTabsDTO;
 import com.exileeconomics.price.SellableItemBuilder;
 import com.exileeconomics.price.SellableItemDTO;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashTabsDTO> {
+public class PublicStashTabsDeserializer implements ApiDeserializer<List<ItemDTO>> {
     private final String activeLeague;
     private final SellableItemBuilder sellableItemBuilder;
+    private final String[] parsableMods = {"enchantMods", "implicitMods", "explicitMods", "craftedMods", "fracturedMods", "veiledMods"};
 
     public PublicStashTabsDeserializer(String activeLeague, SellableItemBuilder sellableItemBuilder) {
         this.activeLeague = activeLeague;
@@ -21,11 +24,9 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
     }
 
     @Override
-    public PublicStashTabsDTO fromJson(JsonObject jsonObject) {
-        PublicStashTabsDTO publicStashTabsDTO = new PublicStashTabsDTO();
+    public List<ItemDTO> fromJson(JsonObject jsonObject) {
         List<JsonElement> stashes = jsonObject.get("stashes").getAsJsonArray().asList();
 
-        List<List<ItemDTO>> items = new ArrayList<>();
         List<ItemDTO> itemDTOList = new ArrayList<>();
 
         for (JsonElement stashObject : stashes) {
@@ -35,20 +36,11 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                     continue;
                 }
 
-                items.add(itemFromJson(stash));
+                itemDTOList.addAll(itemFromJson(stash));
             }
         }
 
-        if(!items.isEmpty()) {
-            for(List<ItemDTO> itemDTOLoopList : items) {
-                if(!itemDTOLoopList.isEmpty()) {
-                    itemDTOList.addAll(itemDTOLoopList);
-                }
-            }
-        }
-        publicStashTabsDTO.setItemDTOS(itemDTOList);
-
-        return publicStashTabsDTO;
+        return itemDTOList;
     }
 
     private List<ItemDTO> itemFromJson(JsonObject stash) {
@@ -70,7 +62,18 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
             }
 
             JsonObject itemJson = jsonElementItem.getAsJsonObject();
+
             if (!isItemValid(itemJson)) {
+                continue;
+            }
+
+            ItemDefinitionEnum itemDefinitionEnum;
+            try {
+                itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("baseType").getAsString());
+            } catch (IllegalArgumentException e) {
+                itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("name").getAsString());
+            }
+            if(itemDefinitionEnum == null) {
                 continue;
             }
 
@@ -81,14 +84,34 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                 continue;
             }
 
-            ItemDefinitionEnum itemDefinitionEnum = ItemDefinitionEnum.fromString(itemJson.get("baseType").getAsString());
-
             ItemDTO item = new ItemDTO();
             item.setPrice(sellableItemDTO.getPrice());
             item.setSoldQuantity(sellableItemDTO.getSoldQuantity());
-            item.setTotalQuantity(itemJson.get("stackSize").getAsInt());
+            item.setTotalQuantity(
+                    itemJson.has("stackSize") ?
+                    itemJson.get("stackSize").getAsInt() : 1
+            );
             item.setItem(itemDefinitionEnum);
+            item.setIcon(itemJson.get("icon").getAsString());
             item.setCurrencyRatio(sellableItemDTO.getCurrencyRatio());
+
+            if(itemJson.has("name") && !itemJson.get("name").getAsString().equals("") && ItemDefinitionEnum.contains(itemJson.get("name").getAsString().toLowerCase())) {
+                List<ItemEntityMod> mods = new ArrayList<>();
+                for(String parsableMod : parsableMods) {
+                    if(itemJson.has(parsableMod)) {
+                        for(JsonElement mod : itemJson.get(parsableMod).getAsJsonArray()){
+                            ItemEntityMod itemEntityMod = new ItemEntityMod();
+                            if(mod.getAsString().length() >= 255) {
+                                itemEntityMod.setMod(mod.getAsString().substring(0, 254));
+                            } else {
+                                itemEntityMod.setMod(mod.getAsString());
+                            }
+                            mods.add(itemEntityMod);
+                        }
+                    }
+                }
+                item.setMods(mods);
+            }
 
             items.add(item);
         }
@@ -100,9 +123,11 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
         return itemJson.has("note") &&
                 !itemJson.get("note").isJsonNull() &&
                 !itemJson.get("note").getAsString().trim().equals("~skip") &&
-                itemJson.has("stackSize") &&
-                !itemJson.get("stackSize").isJsonNull() &&
-                ItemDefinitionEnum.contains(itemJson.get("baseType").getAsString());
+                (
+                    ItemDefinitionEnum.contains(itemJson.get("baseType").getAsString()) ||
+                    ItemDefinitionEnum.contains(itemJson.get("name").getAsString().toLowerCase())
+                )
+                ;
     }
 
     private boolean isStashValid(JsonObject stash) {

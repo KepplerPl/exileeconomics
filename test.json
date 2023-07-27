@@ -1,0 +1,58 @@
+{
+  "next_change_id": "1997238924-1992673014-1927508782-2136848055-2073720676",
+  "stashes": [
+    {
+      "id": "e392ef9b47f0836d90c7158074b58d6452e73986d74cb9b014c12705ce4a435b",
+      "public": true,
+      "accountName": "Sabahl",
+      "stash": "Maps",
+      "stashType": "MapStash",
+      "league": "Crucible",
+      "items": [
+        {
+          "verified": false,
+          "w": 1,
+          "h": 1,
+          "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvSmV3ZWxzL0lOVHRvU1RSIiwidyI6MSwiaCI6MSwic2NhbGUiOjF9XQ/3631faae6d/INTtoSTR.png",
+          "league": "Crucible",
+          "id": "6573aaf3e5d8640242a3b9bb1b1f43744f2333fa6df6af64c087b92b408db2d0",
+          "name": "Efficient Training",
+          "typeLine": "Crimson Jewel",
+          "baseType": "Crimson Jewel",
+          "identified": true,
+          "ilvl": 83,
+          "corrupted": true,
+          "note": "~price 2 chaos",
+          "properties": [
+            {
+              "name": "Radius",
+              "values": [
+                [
+                  "Large",
+                  0
+                ]
+              ],
+              "displayMode": 0,
+              "type": 26
+            }
+          ],
+          "explicitMods": [
+            "+20 to Strength",
+            "Intelligence from Passives in Radius is Transformed to Strength"
+          ],
+          "descrText": "Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.",
+          "flavourText": [
+            "Working smart and working hard aren't mutually exclusive."
+          ],
+          "frameType": 3,
+          "extended": {
+            "category": "jewels"
+          },
+          "x": 7,
+          "y": 5,
+          "inventoryId": "Stash49"
+        },
+      ]
+    },
+  ]
+}
