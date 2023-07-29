@@ -4,6 +4,11 @@ public class AbstractQuantityLimit implements QuantityLimitInterface{
     protected int quantityLowerLimit;
     protected int quantityUpperLimit;
 
+    public AbstractQuantityLimit(int quantityLowerLimit, int quantityUpperLimit) {
+        this.quantityLowerLimit = quantityLowerLimit;
+        this.quantityUpperLimit = quantityUpperLimit;
+    }
+
     @Override
     public int getQuantityLowerLimit() {
         return quantityLowerLimit;

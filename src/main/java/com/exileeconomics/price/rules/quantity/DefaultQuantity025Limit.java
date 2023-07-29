@@ -5,8 +5,7 @@ import java.util.Objects;
 public  final class DefaultQuantity025Limit extends AbstractQuantityLimit {
 
     public DefaultQuantity025Limit() {
-        quantityLowerLimit = 0;
-        quantityUpperLimit = 25;
+        super(0, 25);
     }
 
     @Override
