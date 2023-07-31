@@ -8,7 +8,7 @@ import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
 import com.exileeconomics.http.Throttler;
 import com.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
-import com.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
+import com.exileeconomics.mapper.serializer.PublicStashTabsJsonDeserializer;
 import com.exileeconomics.price.CurrencyRatioProducer;
 import com.exileeconomics.price.ParsableCurrency;
 import com.exileeconomics.price.SellableItemBuilder;
@@ -78,7 +78,7 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void startPublicStashConsumer() {
-        PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson = new PublicStashTabsDeserializerFromJson(
+        PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer = new PublicStashTabsJsonDeserializer(
                 new PublicStashTabsDeserializer(
                         appProperties.getActiveLeague(),
                         new SellableItemBuilder(currencyRatioMap)
@@ -90,7 +90,7 @@ public final class PublicStashTabsOrchestrator {
                 getItemDefinitions(),
                 itemEntityService,
                 countDownLatchForCurrencyRatioInitialization,
-                publicStashTabsDeserializerFromJson
+                publicStashTabsJsonDeserializer
         );
         executorService.scheduleWithFixedDelay(publicStashTabsConsumer, 10_000, 10_000, TimeUnit.MILLISECONDS);
     }

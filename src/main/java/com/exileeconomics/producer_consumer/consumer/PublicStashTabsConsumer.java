@@ -7,8 +7,7 @@ import com.exileeconomics.entity.ItemEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
 import com.exileeconomics.mapper.ItemDTO;
 import com.exileeconomics.mapper.PublicStashTabsDTO;
-import com.exileeconomics.mapper.serializer.PublicStashTabsDeserializerFromJson;
-import com.exileeconomics.service.ItemDefinitionsService;
+import com.exileeconomics.mapper.serializer.PublicStashTabsJsonDeserializer;
 import com.exileeconomics.service.ItemEntityService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -22,20 +21,20 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
     private final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions;
     private final ItemEntityService itemEntityService;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
-    private final PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson;
+    private final PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer;
 
     public PublicStashTabsConsumer(
             BlockingQueue<String> jsonResponsesQueue,
             HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions,
             ItemEntityService itemEntityService,
             CountDownLatch countDownLatchForCurrencyRatioInitialization,
-            PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson
+            PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer
     ) {
         this.jsonResponsesQueue = jsonResponsesQueue;
         this.itemDefinitions = itemDefinitions;
         this.itemEntityService = itemEntityService;
         this.countDownLatchForCurrencyRatioInitialization = countDownLatchForCurrencyRatioInitialization;
-        this.publicStashTabsDeserializerFromJson = publicStashTabsDeserializerFromJson;
+        this.publicStashTabsJsonDeserializer = publicStashTabsJsonDeserializer;
     }
 
     @Override
@@ -50,7 +49,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(
                 PublicStashTabsDTO.class,
-                publicStashTabsDeserializerFromJson
+                publicStashTabsJsonDeserializer
         );
         Gson gson = builder.create();
 

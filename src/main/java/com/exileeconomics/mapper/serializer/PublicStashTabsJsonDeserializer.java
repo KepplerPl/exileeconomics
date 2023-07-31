@@ -6,10 +6,10 @@ import com.google.gson.*;
 
 import java.lang.reflect.Type;
 
-public class PublicStashTabsDeserializerFromJson implements JsonDeserializer<PublicStashTabsDTO> {
+public class PublicStashTabsJsonDeserializer implements JsonDeserializer<PublicStashTabsDTO> {
     private final ApiDeserializer<PublicStashTabsDTO> deserializer;
 
-    public PublicStashTabsDeserializerFromJson(ApiDeserializer<PublicStashTabsDTO> deserializer) {
+    public PublicStashTabsJsonDeserializer(ApiDeserializer<PublicStashTabsDTO> deserializer) {
         this.deserializer = deserializer;
     }
 
