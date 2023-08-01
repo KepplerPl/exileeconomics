@@ -4,7 +4,6 @@ import com.exileeconomics.AppProperties;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.entity.CurrencyRatioEntity;
 import com.exileeconomics.entity.ItemDefinitionEntity;
-import com.exileeconomics.http.ApiHeaderBag;
 import com.exileeconomics.http.RequestHandler;
 import com.exileeconomics.http.Throttler;
 import com.exileeconomics.mapper.deserializer.PublicStashTabsDeserializer;
@@ -78,14 +77,14 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void startPublicStashConsumer() {
-        PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer = new PublicStashTabsJsonDeserializer(
+        final PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer = new PublicStashTabsJsonDeserializer(
                 new PublicStashTabsDeserializer(
                         appProperties.getActiveLeague(),
                         new SellableItemBuilder(currencyRatioMap)
                 )
         );
 
-        PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
+        final PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
                 jsonResponsesQueue,
                 getItemDefinitions(),
                 itemEntityService,
@@ -96,11 +95,10 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void startPublicStashProducer() {
-        PublicStashTabsProducer publicStashTabsProducer = new PublicStashTabsProducer(
+        final PublicStashTabsProducer publicStashTabsProducer = new PublicStashTabsProducer(
                 jsonResponsesQueue,
                 new Throttler(),
                 requestHandler,
-                new ApiHeaderBag(),
                 nextIdService,
                 countDownLatchForCurrencyRatioInitialization
         );
@@ -108,7 +106,7 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private HashMap<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
-        Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
+        final Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
         final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
 
         for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {

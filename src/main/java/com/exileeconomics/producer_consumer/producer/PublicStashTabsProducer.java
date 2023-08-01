@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -23,7 +24,6 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     private final BlockingQueue<String> jsonResponsesQueue;
     private final Throttler throttler;
     private final RequestHandler requestHandler;
-    private final ApiHeaderBag apiHeaderBag;
     private final NextIdService nextIdService;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
 
@@ -31,14 +31,12 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
             BlockingQueue<String> jsonResponsesQueue,
             Throttler throttler,
             RequestHandler requestHandler,
-            ApiHeaderBag apiHeaderBag,
             NextIdService nextIdService,
             CountDownLatch countDownLatchForCurrencyRatioInitialization
     ) {
         this.jsonResponsesQueue = jsonResponsesQueue;
         this.throttler = throttler;
         this.requestHandler = requestHandler;
-        this.apiHeaderBag = apiHeaderBag;
         this.nextIdService = nextIdService;
         this.countDownLatchForCurrencyRatioInitialization = countDownLatchForCurrencyRatioInitialization;
     }
@@ -46,8 +44,11 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
     @Override
     public void doRun() throws IOException, InterruptedException {
         countDownLatchForCurrencyRatioInitialization.await();
+        ApiHeaderBag apiHeaderBag = new ApiHeaderBag();
+
         if(nextIdQueue.isEmpty()) {
             setCurrentNextId();
+            apiHeaderBag.setHeaders(getCurrentHeaders());
         }
 
         while(!nextIdQueue.isEmpty()) {
@@ -133,17 +134,17 @@ public class PublicStashTabsProducer implements NoSuppressedRunnable {
         nextIdService.save(nextIdEntityQ);
     }
 
+    private Map<String, List<String>> getCurrentHeaders() {
+        try {
+            HttpURLConnection request = requestHandler.getPublicStashTabs(nextIdQueue.element());
+            return request.getHeaderFields();
+        } catch (IOException | NoSuchElementException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void setCurrentNextId() throws InterruptedException {
         NextIdEntity nextIdEntity = nextIdService.findFirstByOrderByCreatedAtDesc();
         nextIdQueue.put(nextIdEntity.getNextId());
-
-        try {
-            HttpURLConnection request = requestHandler.getPublicStashTabs(nextIdEntity.getNextId());
-            Map<String, List<String>> headers = request.getHeaderFields();
-            apiHeaderBag.setHeaders(headers);
-        } catch (IOException e) {
-            System.out.println("function setInitialHeaders tried to poll nextId but gave up after waiting 10 seconds");
-            throw new RuntimeException(e);
-        }
     }
 }

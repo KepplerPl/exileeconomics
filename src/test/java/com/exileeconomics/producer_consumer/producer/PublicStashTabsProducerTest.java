@@ -53,7 +53,6 @@ public class PublicStashTabsProducerTest {
                 jsonResponses,
                 throttler,
                 requestHandler,
-                apiHeaderBag,
                 nextIdService,
                 countDownLatch
         );
