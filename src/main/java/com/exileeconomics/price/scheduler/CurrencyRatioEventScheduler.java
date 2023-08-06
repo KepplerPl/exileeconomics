@@ -25,7 +25,6 @@ public class CurrencyRatioEventScheduler {
     private final CurrencyRatioService currencyRatioService;
     private final ItemEntityService itemEntityService;
     private final ItemDefinitionsService itemDefinitionsService;
-    private final Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap = new HashMap<>();
 
     public CurrencyRatioEventScheduler(
             @Autowired ApplicationEventPublisher applicationEventPublisher,
@@ -40,12 +39,12 @@ public class CurrencyRatioEventScheduler {
     }
 
     public void publishCurrencyRatioRecalculatedEvent(Map<ItemDefinitionEnum, CurrencyRatioEntity> currencyRatioMap) {
-        CurrencyRatioUpdateEvent customSpringEvent = new CurrencyRatioUpdateEvent(this, currencyRatioMap);
-        applicationEventPublisher.publishEvent(customSpringEvent);
+        CurrencyRatioUpdateEvent ratioEvent = new CurrencyRatioUpdateEvent(this, currencyRatioMap);
+        applicationEventPublisher.publishEvent(ratioEvent);
     }
 
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CurrencyRatioException.class})
-    @Scheduled(cron = "0 0 23 * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItemEntriesEvery12Hours() throws CurrencyRatioException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
@@ -60,15 +59,19 @@ public class CurrencyRatioEventScheduler {
         // divine average price calc
         ItemDefinitionEntity divineOrbEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.DIVINE_ORB);
         BigDecimal divineAveragePrice = calculateAveragePriceForDivine(now, nowMinus12Hours, chaosOrbEntity, divineOrbEntity);
-        saveDivineAveragePrice(divineOrbEntity, divineAveragePrice);
+        CurrencyRatioEntity divineOrbRation = saveDivineAveragePrice(divineOrbEntity, divineAveragePrice);
 
         // add one for chaos as well, even though it's not calculated
         ItemDefinitionEntity chaosEntity = itemDefinitionsService.findFirsItemDefinitionByItemDefinitionEnum(ItemDefinitionEnum.CHAOS_ORB);
-        saveChaosAveragePrice(chaosEntity);
+        CurrencyRatioEntity chaosOrbRation = saveChaosAveragePrice(chaosEntity);
+
+        Map<ItemDefinitionEnum, CurrencyRatioEntity> ratioMap = new HashMap<>();
+        ratioMap.put(ItemDefinitionEnum.DIVINE_ORB, divineOrbRation);
+        ratioMap.put(ItemDefinitionEnum.CHAOS_ORB, chaosOrbRation);
 
         // save after getting all so that an exception can trigger if anything goes wrong
-        currencyRatioService.saveAll(currencyRatioMap.values());
-        publishCurrencyRatioRecalculatedEvent(currencyRatioMap);
+        currencyRatioService.saveAll(ratioMap.values());
+        publishCurrencyRatioRecalculatedEvent(ratioMap);
     }
 
     private BigDecimal calculateAveragePriceForDivine(Timestamp now,
@@ -109,20 +112,22 @@ public class CurrencyRatioEventScheduler {
         throw new CurrencyRatioException("Unable to calculate price");
     }
 
-    private void saveDivineAveragePrice(
+    private CurrencyRatioEntity saveDivineAveragePrice(
             ItemDefinitionEntity divineOrbEntity,
             BigDecimal divineAveragePrice
     ) {
         CurrencyRatioEntity divineCurrencyRatio = new CurrencyRatioEntity();
         divineCurrencyRatio.setItemDefinitionEntity(divineOrbEntity);
         divineCurrencyRatio.setChaos(divineAveragePrice);
-        currencyRatioMap.put(ItemDefinitionEnum.DIVINE_ORB, divineCurrencyRatio);
+        
+        return divineCurrencyRatio;
     }
 
-    private void saveChaosAveragePrice(ItemDefinitionEntity chaosEntity) {
+    private CurrencyRatioEntity saveChaosAveragePrice(ItemDefinitionEntity chaosEntity) {
         CurrencyRatioEntity chaosCurrencyRatio = new CurrencyRatioEntity();
         chaosCurrencyRatio.setItemDefinitionEntity(chaosEntity);
         chaosCurrencyRatio.setChaos(BigDecimal.valueOf(1));
-        currencyRatioMap.put(ItemDefinitionEnum.CHAOS_ORB, chaosCurrencyRatio);
+        
+        return chaosCurrencyRatio;
     }
 }

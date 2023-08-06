@@ -11,7 +11,6 @@ import com.exileeconomics.price.rules.ItemPriceRule;
 import com.exileeconomics.price.rules.PriceRules;
 import com.exileeconomics.price.rules.exceptions.RuleNotFoundException;
 import com.exileeconomics.price.rules.quantity.QuantityLimitInterface;
-import com.exileeconomics.service.CurrencyRatioService;
 import com.exileeconomics.service.ItemAveragePriceEntityService;
 import com.exileeconomics.service.ItemDefinitionsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +44,7 @@ public class ItemAveragePriceCalculatorScheduler {
         this.parsableCurrency = parsableCurrency;
     }
 
-    @Scheduled(cron = "0 2 23 * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void scheduledItemPriceCalculationInsertBasedOnAveragePriceOfItemEntriesEvery12Hours() throws AveragePriceCalculationException, RuleNotFoundException {
         long start = System.currentTimeMillis();
 
@@ -113,6 +112,7 @@ public class ItemAveragePriceCalculatorScheduler {
                     itemAveragePriceEntity.setQuantityUpperLimit(quantityLimits.getQuantityUpperLimit());
                     itemAveragePriceEntity.setPrice(averagePrice);
                     itemAveragePriceEntity.setItem(soldItemEntity);
+
                     itemAveragePriceEntities.add(itemAveragePriceEntity);
                 }
             }

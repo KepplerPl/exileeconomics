@@ -26,7 +26,6 @@ public class PublicStashTabsProducerTest {
     private final CountDownLatch countDownLatch = new CountDownLatch(0);
     private final BlockingQueue<String> jsonResponses = new ArrayBlockingQueue<>(10);
     private final Throttler throttler = new Throttler();
-    private final ApiHeaderBag apiHeaderBag = new ApiHeaderBag();
 
     @Test
     public void testDoRun() throws IOException, InterruptedException {

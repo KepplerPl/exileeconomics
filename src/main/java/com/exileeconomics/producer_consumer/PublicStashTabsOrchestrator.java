@@ -77,14 +77,14 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private void startPublicStashConsumer() {
-        final PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer = new PublicStashTabsJsonDeserializer(
+        PublicStashTabsJsonDeserializer publicStashTabsJsonDeserializer = new PublicStashTabsJsonDeserializer(
                 new PublicStashTabsDeserializer(
                         appProperties.getActiveLeague(),
                         new SellableItemBuilder(currencyRatioMap)
                 )
         );
 
-        final PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
+        PublicStashTabsConsumer publicStashTabsConsumer = new PublicStashTabsConsumer(
                 jsonResponsesQueue,
                 getItemDefinitions(),
                 itemEntityService,
@@ -106,8 +106,8 @@ public final class PublicStashTabsOrchestrator {
     }
 
     private HashMap<ItemDefinitionEnum, ItemDefinitionEntity> getItemDefinitions() {
-        final Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
-        final HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
+        Iterable<ItemDefinitionEntity> itemDefinitionFromDatabase = itemDefinitionsService.findAll();
+        HashMap<ItemDefinitionEnum, ItemDefinitionEntity> itemDefinitions = new HashMap<>();
 
         for (ItemDefinitionEntity itemDefinitionEntity : itemDefinitionFromDatabase) {
             itemDefinitions.put(ItemDefinitionEnum.fromString(itemDefinitionEntity.getName()), itemDefinitionEntity);
