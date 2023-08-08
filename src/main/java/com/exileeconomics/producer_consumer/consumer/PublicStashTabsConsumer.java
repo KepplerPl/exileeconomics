@@ -28,7 +28,6 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
     private final ItemDefinitionsService itemDefinitionsService;
     private final CountDownLatch countDownLatchForCurrencyRatioInitialization;
     private final PublicStashTabsDeserializerFromJson publicStashTabsDeserializerFromJson;
-    private final List<ItemEntity> itemEntityList = new ArrayList<>(100);
     private final List<ItemDefinitionEntity> itemDefinitionEntities = new ArrayList<>(100);
     private final Set<ItemDefinitionEnum> itemDefinitionsIcons = new HashSet<>() ;
 
@@ -58,7 +57,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
     public void doRun() throws InterruptedException {
         countDownLatchForCurrencyRatioInitialization.await();
 
-        if(jsonResponsesQueue.size() == 0) {
+        if(jsonResponsesQueue.isEmpty()) {
             System.out.println("Nothing to consume, returning...");
             return;
         }
@@ -82,8 +81,9 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
 
     private void saveItems(List<ItemDTO> items) {
         if (!items.isEmpty()) {
+            final List<ItemEntity> itemEntityList = new ArrayList<>(100);
+
             for (ItemDTO itemDTO : items) {
-                List<ItemEntityMod> itemMods = new ArrayList<>();
                 ItemDefinitionEntity itemDefinition = itemDefinitions.get(itemDTO.getItem());
                 if(itemDefinition.getIcon() == null && itemDefinitionsIcons.contains(itemDTO.getItem())) {
                     itemDefinition.setIcon(itemDTO.getIcon());
@@ -98,28 +98,8 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
                 itemEntity.setItem(itemDefinition);
                 itemEntity.setCurrencyRatio(itemDTO.getCurrencyRatio());
                 if(itemDTO.getMods() != null) {
-                    for(ItemEntityMod currentMod : itemDTO.getMods()) {
-                        if(existingItemEntityMods.containsKey(currentMod.getMod())) {
-                            itemMods.add(existingItemEntityMods.get(currentMod.getMod()));
-                        } else {
-                            Optional<ItemEntityMod> optionalMod = itemEntityModService.findFirstByMod(currentMod.getMod());
-                            if(optionalMod.isPresent()) {
-                                ItemEntityMod mod = optionalMod.get();
-                                existingItemEntityMods.put(mod.getMod(), mod);
-                                itemMods.add(mod);
-                            } else {
-                                ItemEntityMod newMod = new ItemEntityMod();
-                                newMod.setMod(currentMod.getMod());
-
-                                ItemEntityMod mod = itemEntityModService.save(newMod);
-                                existingItemEntityMods.put(mod.getMod(), mod);
-                                itemMods.add(mod);
-                            }
-                        }
-                    }
+                    itemEntity.setMods(createItemModsListFromExistingModsOrAddNew(itemDTO));
                 }
-
-                itemEntity.setMods(itemMods);
 
                 itemEntityList.add(itemEntity);
             }
@@ -127,7 +107,6 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
             System.out.printf("Saving a total of %s items to database%n", itemEntityList.size());
 
             itemEntityService.saveAll(itemEntityList);
-            itemEntityList.clear();
 
             // save item icons
             if(!itemDefinitionEntities.isEmpty()) {
@@ -135,5 +114,30 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
                 itemDefinitionEntities.clear();
             }
         }
+    }
+
+    private List<ItemEntityMod> createItemModsListFromExistingModsOrAddNew(ItemDTO itemDTO) {
+        List<ItemEntityMod> itemMods = new ArrayList<>();
+        for(ItemEntityMod currentMod : itemDTO.getMods()) {
+            if(existingItemEntityMods.containsKey(currentMod.getMod())) {
+                itemMods.add(existingItemEntityMods.get(currentMod.getMod()));
+            } else {
+                Optional<ItemEntityMod> optionalMod = itemEntityModService.findFirstByMod(currentMod.getMod());
+                if(optionalMod.isPresent()) {
+                    ItemEntityMod mod = optionalMod.get();
+                    existingItemEntityMods.put(mod.getMod(), mod);
+                    itemMods.add(mod);
+                } else {
+                    ItemEntityMod newMod = new ItemEntityMod();
+                    newMod.setMod(currentMod.getMod());
+
+                    ItemEntityMod mod = itemEntityModService.save(newMod);
+                    existingItemEntityMods.put(mod.getMod(), mod);
+                    itemMods.add(mod);
+                }
+            }
+        }
+        
+        return itemMods;
     }
 }

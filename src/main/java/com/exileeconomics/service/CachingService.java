@@ -2,7 +2,7 @@ package com.exileeconomics.service;
 
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 public class CachingService {
     private final Gson gson = new Gson();
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisOperations<String, String> redisTemplate;
 
-    public CachingService(@Autowired RedisTemplate<String, String> redisTemplate) {
+    public CachingService(@Autowired RedisOperations<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
