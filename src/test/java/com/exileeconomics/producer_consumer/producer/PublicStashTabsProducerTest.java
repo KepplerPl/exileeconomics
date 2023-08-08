@@ -58,7 +58,6 @@ public class PublicStashTabsProducerTest {
 
         service.execute(publicStashTabsProducer);
 
-        service.shutdown();
         try {
             if (!service.awaitTermination(1, TimeUnit.SECONDS)) {
                 service.shutdownNow();
