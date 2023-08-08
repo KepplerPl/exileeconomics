@@ -59,7 +59,16 @@ public class PublicStashTabsProducerTest {
         service.execute(publicStashTabsProducer);
 
         service.shutdown();
-        service.awaitTermination(1L, TimeUnit.SECONDS);
+        try {
+            if (!service.awaitTermination(1, TimeUnit.SECONDS)) {
+                service.shutdownNow();
+                if (!service.awaitTermination(1, TimeUnit.SECONDS))
+                    System.err.println("Pool did not terminate");
+            }
+        } catch (InterruptedException ex) {
+            service.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
 
         Mockito.verify(requestHandler, Mockito.times(3)).getPublicStashTabs(Mockito.anyString());
         Mockito.verify(requestHandler, Mockito.times(1)).getResponseAsString(connection);
