@@ -41,7 +41,7 @@ public class PublicStashTabsConsumer implements NoSuppressedRunnable {
     public void doRun() throws InterruptedException {
         countDownLatchForCurrencyRatioInitialization.await();
 
-        if(jsonResponsesQueue.size() == 0) {
+        if(jsonResponsesQueue.isEmpty()) {
             System.out.println("Nothing to consume, returning...");
             return;
         }

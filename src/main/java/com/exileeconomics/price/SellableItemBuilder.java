@@ -39,7 +39,7 @@ public class SellableItemBuilder {
         // ~b/o 8 chaos
         // "~price  chaos" - not a mistake, that's how it arrives from the api
         price = parts[1];
-        if(price.trim().equals("")) {
+        if(price.trim().isEmpty()) {
             throw new InvalidPriceException("Price is an empty string");
         }
 
@@ -57,19 +57,12 @@ public class SellableItemBuilder {
 
         if(price.contains("/")) {
             String[] fractionParts = price.split("/");
-            int numerator = Integer.parseInt(fractionParts[0]);
             int denominator = Integer.parseInt(fractionParts[1]);
 
-            BigDecimal numeratorBigDecimal = new BigDecimal(numerator).multiply(currencyRatio);
-            BigDecimal denominatorBigDecimal = new BigDecimal(denominator);
-
-            resultingPrice = numeratorBigDecimal.divide(denominatorBigDecimal, 4, RoundingMode.HALF_DOWN);
+            resultingPrice = calculatePriceWhenFraction(price, currencyRatio);
             sellableItemDTO.setSoldQuantity(denominator);
         }else{
-            resultingPrice = BigDecimal
-                    .valueOf(Double.parseDouble(price))
-                    .multiply(currencyRatio)
-                    .setScale(4, RoundingMode.HALF_DOWN);
+            resultingPrice = calculatePriceWhenDouble(price, currencyRatio);
             sellableItemDTO.setSoldQuantity(1);
         }
 
@@ -81,5 +74,23 @@ public class SellableItemBuilder {
         sellableItemDTO.setCurrencyRatio(currencyRatioInChaos);
 
         return sellableItemDTO;
+    }
+
+    private BigDecimal calculatePriceWhenDouble(String price, BigDecimal currencyRatio) {
+        return BigDecimal
+                .valueOf(Double.parseDouble(price))
+                .multiply(currencyRatio)
+                .setScale(4, RoundingMode.HALF_DOWN);
+    }
+
+    private BigDecimal calculatePriceWhenFraction(String price, BigDecimal currencyRatio) {
+        String[] fractionParts = price.split("/");
+        int numerator = Integer.parseInt(fractionParts[0]);
+        int denominator = Integer.parseInt(fractionParts[1]);
+
+        BigDecimal numeratorBigDecimal = new BigDecimal(numerator).multiply(currencyRatio);
+        BigDecimal denominatorBigDecimal = new BigDecimal(denominator);
+
+        return numeratorBigDecimal.divide(denominatorBigDecimal, 4, RoundingMode.HALF_DOWN);
     }
 }

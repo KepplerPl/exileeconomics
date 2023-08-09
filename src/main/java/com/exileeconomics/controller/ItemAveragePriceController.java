@@ -1,5 +1,6 @@
 package com.exileeconomics.controller;
 
+import com.exileeconomics.cache.redis.TimeToLive;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.entity.ItemAveragePriceEntity;
 import com.exileeconomics.price.dto.AverageItemPriceDTO;
@@ -85,7 +86,7 @@ public class ItemAveragePriceController {
         averageItemPriceDTO.setSoldFor(soldFor.getName());
         averageItemPriceDTO.setSoldItem(soldItem.getName());
 
-        cachingService.set(key, averageItemPriceDTO, 1, TimeUnit.HOURS);
+        cachingService.set(key, averageItemPriceDTO, new TimeToLive(1, TimeUnit.HOURS));
 
         return new ResponseEntity<>(averageItemPriceDTO, HttpStatus.OK);
     }

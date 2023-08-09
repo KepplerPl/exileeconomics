@@ -1,11 +1,10 @@
 package com.exileeconomics.service;
 
+import com.exileeconomics.cache.redis.TimeToLive;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class CachingService {
@@ -17,9 +16,9 @@ public class CachingService {
         this.redisTemplate = redisTemplate;
     }
 
-    public void set(final String key, final Object object, final int ttl, final TimeUnit timeUnit) {
+    public void set(final String key, final Object object, final TimeToLive ttl) {
         redisTemplate.opsForValue().set(key, gson.toJson(object));
-        redisTemplate.expire(key, ttl, timeUnit);
+        redisTemplate.expire(key, ttl.getTtl(), ttl.getTimeUnit());
     }
 
     public String get(final String key) {

@@ -1,5 +1,6 @@
 package com.exileeconomics.controller;
 
+import com.exileeconomics.cache.redis.TimeToLive;
 import com.exileeconomics.definitions.ItemDefinitionEnum;
 import com.exileeconomics.definitions.ItemDefinitionEnumCategoryMapper;
 import com.exileeconomics.entity.ItemDefinitionEntity;
@@ -53,7 +54,7 @@ public class ItemDefinitionEnumController {
                         itemDefinitionEntity -> ItemDefinitionEnum.getCategoryFromName(itemDefinitionEntity.getMachineName().getName())
                 ));
 
-        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemDefinitionEnumCategoryMapperListMap, 1, TimeUnit.HOURS);
+        cachingService.set(ITEM_ENUM_DEFINITION_CACHE_KEY_NAME, itemDefinitionEnumCategoryMapperListMap, new TimeToLive(1, TimeUnit.HOURS));
 
         return new ResponseEntity<>(itemDefinitionEnumCategoryMapperListMap, HttpStatus.OK);
     }
