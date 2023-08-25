@@ -111,6 +111,6 @@ public class PublicStashTabsDeserializer implements ApiDeserializer<PublicStashT
                 !stash.get("items").getAsJsonArray().isEmpty() &&
                 stash.has("league") &&
                 !stash.get("league").isJsonNull() &&
-                stash.get("league").getAsString().trim().toLowerCase().equals(activeLeague);
+                stash.get("league").getAsString().trim().equalsIgnoreCase(activeLeague);
     }
 }

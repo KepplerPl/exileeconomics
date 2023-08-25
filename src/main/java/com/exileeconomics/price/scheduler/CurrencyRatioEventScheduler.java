@@ -44,7 +44,7 @@ public class CurrencyRatioEventScheduler {
     }
 
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CurrencyRatioException.class})
-    @Scheduled(cron = "0 * * * * *")
+//    @Scheduled(cron = "0 * * * * *")
     public void scheduledCurrencyRatioUpdateBasedOnAveragePriceOfItemEntriesEvery12Hours() throws CurrencyRatioException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
 

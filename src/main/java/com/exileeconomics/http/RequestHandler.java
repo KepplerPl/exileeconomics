@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Service
 public class RequestHandler {
@@ -30,6 +33,10 @@ public class RequestHandler {
     }
 
     public String getResponseAsString(HttpURLConnection connection) throws IOException {
+//        String content = Files.readString(Paths.get("C:\\Users\\Mine\\Desktop\\exileeconomics\\test.json"), Charset.defaultCharset());
+//
+//        return content;
+
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String inputLine;
         StringBuilder content = new StringBuilder();

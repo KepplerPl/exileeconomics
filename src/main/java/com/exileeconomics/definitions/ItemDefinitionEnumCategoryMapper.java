@@ -18,4 +18,6 @@ public enum ItemDefinitionEnumCategoryMapper {
     INVITATION,
     BEAST,
     CATALYST,
+    OMEN,
+    TATTOO,
 }

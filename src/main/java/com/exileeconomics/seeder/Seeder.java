@@ -96,7 +96,7 @@ public class Seeder {
     private void seedNextId() {
         if(!nextIdService.findAll().iterator().hasNext()) {
             NextIdEntity nextIdEntity = new NextIdEntity();
-            nextIdEntity.setNextId("2004283927-2001025847-1934275331-2145533334-2080672660");
+            nextIdEntity.setNextId("2028944954-2025865975-1957741709-2171578238-2106009773");
             nextIdService.save(nextIdEntity);
         }
     }
