@@ -44,7 +44,7 @@ public class ItemAveragePriceCalculatorScheduler {
         this.parsableCurrency = parsableCurrency;
     }
 
-//    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "59 * * * * *")
     public void scheduledItemPriceCalculationInsertBasedOnAveragePriceOfItemEntriesEvery12Hours() throws AveragePriceCalculationException, RuleNotFoundException {
         long start = System.currentTimeMillis();
 
